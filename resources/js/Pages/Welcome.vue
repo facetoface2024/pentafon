@@ -5,6 +5,7 @@ import HeaderSection from '@/Components/HeaderSection.vue';
 import HeroIntro from '@/Components/HeroIntro.vue';
 import AgendaSection from '@/Components/AgendaSection.vue';
 import SpeakersSection from '@/Components/SpeakersSection.vue';
+import Ejes from '@/Components/Ejes.vue';
 import RegisterSection from '@/Components/RegisterSection.vue';
 import PrivacyNotice from '@/Components/PrivacyNotice.vue';
 import Preloader from '@/Components/Preloader.vue';
@@ -30,8 +31,9 @@ onMounted(() => {
         <HeaderSection />
         <v-main>
             <HeroIntro id="inicio" />
-            <AgendaSection id="agenda" />
-            <SpeakersSection id="speakers" />
+<!--             <AgendaSection id="agenda" />
+            <SpeakersSection id="speakers" /> -->
+            <Ejes id="ejes" />
             <RegisterSection id="registro" />
         </v-main>
         <PrivacyNotice />
