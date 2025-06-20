@@ -37,7 +37,7 @@ const scrollToSection = (sectionId: string) => {
 
                 <!-- Navigation Desktop -->
                 <div class="navigation-wrapper d-none d-md-flex">
-                    <v-btn
+                 <!--    <v-btn
                         variant="text"
                         @click="scrollToSection('agenda')"
                         class="text-grey-darken-3"
@@ -52,7 +52,7 @@ const scrollToSection = (sectionId: string) => {
                         size="small"
                     >
                         Speakers
-                    </v-btn>
+                    </v-btn> -->
                     <v-btn
                         color="#eb1c2d"
                         variant="flat"
@@ -102,7 +102,7 @@ const scrollToSection = (sectionId: string) => {
                 <v-list-item-title>Inicio</v-list-item-title>
             </v-list-item>
 
-            <v-list-item
+      <!--       <v-list-item
                 @click="scrollToSection('agenda')"
                 prepend-icon="mdi-calendar"
             >
@@ -114,7 +114,7 @@ const scrollToSection = (sectionId: string) => {
                 prepend-icon="mdi-account-group"
             >
                 <v-list-item-title>Speakers</v-list-item-title>
-            </v-list-item>
+            </v-list-item> -->
 
             <v-list-item
                 @click="scrollToSection('registro')"
