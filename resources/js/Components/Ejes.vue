@@ -29,10 +29,9 @@ import eje4Image from '../../images/eje_4.png';
                             <img :src="eje1Image" alt="¿Qué será considerado normal?" class="topic-image" />
                         </div>
                         <div class="topic-content">
-                            <h4 class="topic-title mb-3">¿Qué será considerado <span class="text-highlight">"normal"</span> en los próximos 5 a 10 años?</h4>
+                            <h4 class="topic-title mb-3">¿Qué será <span class="text-highlight">"normal"</span> en los próximos 5 a 10 años?</h4>
                             <p class="topic-description">
-                                Exploraremos cómo evolucionarán los <strong>negocios</strong>, la <strong>tecnología</strong> y la <strong>sociedad</strong>,
-                                y qué <strong class="text-highlight">implicaciones</strong> tendrán estos cambios en la toma de decisiones estratégicas.
+                                <strong>Tendencias</strong> clave que marcarán la nueva realidad de los <strong>negocios, la tecnología y la sociedad.</strong>
                             </p>
                         </div>
                     </div>
@@ -44,11 +43,9 @@ import eje4Image from '../../images/eje_4.png';
                             <img :src="eje2Image" alt="IA generativa, automatización y entornos inmersivos" class="topic-image" />
                         </div>
                         <div class="topic-content">
-                            <h4 class="topic-title mb-3"><span class="text-highlight">IA generativa</span>, automatización y entornos inmersivos</h4>
+                            <h4 class="topic-title mb-3"><span class="text-highlight">IA, automatización</span> y entornos inmersivos</h4>
                             <p class="topic-description">
-                                Conoce el <strong>impacto real</strong> de tecnologías como la <strong>inteligencia artificial</strong>,
-                                el <strong>metaverso</strong> y los <strong>asistentes de voz</strong> en la experiencia del cliente y
-                                la operación de las empresas.
+                                Impacto real de <strong>tecnologías emergentes</strong> en los modelos de operación y relación con el cliente.
                             </p>
                         </div>
                     </div>
@@ -60,10 +57,9 @@ import eje4Image from '../../images/eje_4.png';
                             <img :src="eje3Image" alt="Riesgos y regulaciones de la IA" class="topic-image" />
                         </div>
                         <div class="topic-content">
-                            <h4 class="topic-title mb-3">Riesgos y regulaciones: lo que <span class="text-highlight">sí y lo que no</span> de la IA</h4>
+                            <h4 class="topic-title mb-3"><span class="text-highlight">Inteligencia artificial</span>: riesgos y regulaciones</h4>
                             <p class="topic-description">
-                                Abordaremos los <strong>desafíos más relevantes</strong> de la inteligencia artificial,
-                                desde <strong>sesgos y alucinaciones</strong> hasta el <strong class="text-highlight">marco ético y regulatorio</strong> que se está gestando.
+                                <strong>Sesgos, límites éticos y marcos legales</strong> que ya definen su adopción.
                             </p>
                         </div>
                     </div>
@@ -75,10 +71,9 @@ import eje4Image from '../../images/eje_4.png';
                             <img :src="eje4Image" alt="¿Cómo será tu cliente en 2030?" class="topic-image" />
                         </div>
                         <div class="topic-content">
-                            <h4 class="topic-title mb-3">¿Cómo será tu <span class="text-highlight">cliente en 2030</span>?</h4>
+                            <h4 class="topic-title mb-3"><span class="text-highlight">Cliente 2030</span></h4>
                             <p class="topic-description">
-                                Una <strong>mirada hacia el futuro</strong> del consumidor: qué espera, cómo se comporta
-                                y qué puedes hacer <strong class="text-highlight">desde hoy</strong> para superarlo.
+                                <strong>Cómo evolucionan las expectativas</strong>... y cómo superarlas desde hoy.
                             </p>
                         </div>
                     </div>

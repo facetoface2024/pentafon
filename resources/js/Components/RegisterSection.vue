@@ -74,12 +74,12 @@ onMounted(() => {
                 <v-col cols="12" md="6">
                     <div class="register-form-wrapper">
                         <h2 class="form-title mb-4">
-                            Pre-<span class="text-highlight">regístrate</span>
+                            Forma parte de la <span class="text-highlight">conversación</span> que marcará el futuro.
                         </h2>
                         <p class="form-subtitle mb-8">
-                            El evento es <strong class="text-highlight">gratuito</strong>, pero los espacios son <strong>limitados</strong>.<br>
+                            El evento no tiene costo, pero los espacios son <strong>limitados</strong>.<br><br>
                             <strong>Completa el formulario</strong> para iniciar tu registro.<br>
-                            Muy pronto recibirás <strong>más información</strong> para <strong class="text-highlight">finalizar tu participación</strong>.
+                            En breve recibirás <strong>más información</strong> para <strong class="text-highlight">confirmar tu participación</strong>.
                         </p>
 
                         <!-- Contenedor para el formulario de HubSpot -->

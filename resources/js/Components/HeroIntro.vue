@@ -19,9 +19,11 @@ const scrollToForm = () => {
                         <span class="text-highlight">Lidera</span> el cambio
                     </h1>
                     <p class="hero-description mb-4">
-                        <strong>Pentafon</strong>, en colaboración con <strong class="text-highlight">Microsoft</strong>, te invita a un evento <strong>exclusivo</strong> diseñado
-                         para <strong>líderes</strong> que buscan <strong class="text-bold">transformar</strong> la forma en que se enfrentan
-                          los <strong>desafíos del mañana</strong>.
+                        <strong>Pentafon</strong> y <strong class="text-highlight">Microsoft</strong> unen fuerzas para abrir un espacio donde la innovación deja de ser tendencia... y se convierte en estrategia.
+                    </p>
+                    <p class="hero-description mb-4">
+                        Explora cómo las megatendencias tecnológicas están redefiniendo <strong>los negocios, la experiencia del cliente y las decisiones estratégicas</strong> más audaces.<br>
+                        Un evento diseñado para líderes que no solo quieren adaptarse al futuro, sino construirlo.
                     </p>
                     <p class="event-info mb-8">
                         📍 <strong>Evento presencial</strong> | <em class="text-highlight">Cupo limitado</em>

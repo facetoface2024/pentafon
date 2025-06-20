@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import logoSvg from '../../images/logo.svg';
-import innovationSvg from '../../images/innovation.svg';
+import innovationSvg from '../../images/frase-2.png';
 
 const drawer = ref(false);
 
