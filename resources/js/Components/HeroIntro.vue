@@ -14,7 +14,6 @@ const scrollToForm = () => {
         <v-container fluid class="pa-0">
             <v-row class="align-center ma-0" style="min-height: calc(100vh - 64px)">
                 <v-col cols="12" md="6" lg="6" class="pa-8 pa-md-12">
-                    <div class="innovation-text mb-6">innovation</div>
                     <h1 class="hero-title mb-6">
                         Anticípate al futuro.<br>
                         Lidera el cambio
@@ -59,7 +58,7 @@ const scrollToForm = () => {
 .hero-section {
     position: relative;
     background-color: #fdfdfb;
-    overflow: hidden;
+    overflow-x: hidden;
 }
 
 .innovation-text {
@@ -112,13 +111,30 @@ const scrollToForm = () => {
 
 /* Estilos para móvil */
 @media (max-width: 959px) {
+    .hero-section {
+        overflow: visible;
+    }
+
+    .hero-image-col {
+        position: static;
+        width: 100vw;
+        max-width: none;
+        margin-left: calc(-50vw + 50%);
+        margin-right: calc(-50vw + 50%);
+    }
+
     .hero-image-container {
         height: auto;
         margin-top: 2rem;
+        width: 100%;
     }
 
     .hero-image {
-        max-height: 400px;
+        height: 80vh;
+        min-height: 400px;
+        max-height: 600px;
+        width: 100%;
+        object-fit: fill;
         object-position: center bottom;
     }
 }
@@ -130,6 +146,8 @@ const scrollToForm = () => {
         right: 0;
         bottom: 0;
         height: calc(100vh - 64px);
+        width: 50%;
+        max-width: none;
     }
 
     .hero-image-container {

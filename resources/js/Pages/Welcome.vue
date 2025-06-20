@@ -31,8 +31,8 @@ onMounted(() => {
         <HeaderSection />
         <v-main>
             <HeroIntro id="inicio" />
-<!--             <AgendaSection id="agenda" />
-            <SpeakersSection id="speakers" /> -->
+        <!--    <AgendaSection id="agenda" />
+            <SpeakersSection id="speakers" />  -->
             <Ejes id="ejes" />
             <RegisterSection id="registro" />
         </v-main>
