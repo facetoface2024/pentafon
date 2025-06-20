@@ -1,0 +1,12 @@
+@import 'vuetify/dist/vuetify.min.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+/* h1, h2, h3, h4, h5, h6, p, li, label {
+    color: #164998 !important;
+  } */
+[type='text']:focus, input:where(:not([type])):focus, [type='email']:focus, [type='url']:focus, [type='password']:focus, [type='number']:focus, [type='date']:focus, [type='datetime-local']:focus, [type='month']:focus, [type='search']:focus, [type='tel']:focus, [type='time']:focus, [type='week']:focus, [multiple]:focus, textarea:focus, select:focus{
+    border: none !important;
+    box-shadow: none !important;
+}
