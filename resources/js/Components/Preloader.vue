@@ -328,7 +328,7 @@ onMounted(() => {
     }
 
     .loader-content {
-        top: 62%;
+        top: 52%;
     }
 
     .pulse-ring {
