@@ -47,58 +47,27 @@ onMounted(() => {
                     </h2>
 
                     <div class="location-card mb-8">
-                        <h3 class="location-title mb-2">INSPACE CDMX</h3>
+                        <h3 class="location-title mb-2"><span class="text-highlight">INSPACE</span> CDMX</h3>
                         <p class="location-address">
-                            C. J. Enrique Pestalozzi 35, Piedad Narvarte,<br>
-                            Benito Juárez, 03000 Ciudad de México, CDMX
+                            <strong>C. J. Enrique Pestalozzi 35</strong>, Piedad Narvarte,<br>
+                            Benito Juárez, <strong>03000 Ciudad de México, CDMX</strong>
                         </p>
-                        <v-btn
-                            color="#eb1c2d"
-                            variant="outlined"
-                            class="mt-4"
-                            href="https://maps.app.goo.gl/QnujJdDK3PDYQpBK6"
-                            target="_blank"
-                        >
-                            Ver mapa
-                        </v-btn>
+
+                        <!-- Embed del mapa -->
+                        <div class="map-container mt-4">
+                            <iframe
+                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3763.215653287468!2d-99.15787549999999!3d19.4030861!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x85d1ff007394e263%3A0xc74be39f7ae858d1!2sInSpace!5e0!3m2!1ses!2smx!4v1750438587174!5m2!1ses!2smx"
+                                width="100%"
+                                height="500"
+                                style="border:0; border-radius: 8px;"
+                                allowfullscreen
+                                loading="lazy"
+                                referrerpolicy="no-referrer-when-downgrade">
+                            </iframe>
+                        </div>
                     </div>
 
-                    <!-- Información adicional -->
-                    <v-expansion-panels class="info-panels">
-                        <v-expansion-panel>
-                            <v-expansion-panel-title>
-                                Nosotros
-                            </v-expansion-panel-title>
-                            <v-expansion-panel-text>
-                                Pentafon es una empresa líder en soluciones de experiencia al cliente,
-                                especializada en la implementación de tecnologías innovadoras para
-                                transformar la forma en que las empresas se conectan con sus clientes.
-                            </v-expansion-panel-text>
-                        </v-expansion-panel>
 
-                        <v-expansion-panel>
-                            <v-expansion-panel-title>
-                                Qué hacemos
-                            </v-expansion-panel-title>
-                            <v-expansion-panel-text>
-                                Desarrollamos e implementamos soluciones de contact center omnicanal,
-                                inteligencia artificial aplicada a CX, automatización de procesos y
-                                análisis avanzado de datos para mejorar la experiencia del cliente.
-                            </v-expansion-panel-text>
-                        </v-expansion-panel>
-
-                        <v-expansion-panel>
-                            <v-expansion-panel-title>
-                                Reconocimientos
-                            </v-expansion-panel-title>
-                            <v-expansion-panel-text>
-                                • Partner Gold de Microsoft<br>
-                                • Líder en el Cuadrante Mágico de Gartner para CCaaS<br>
-                                • Premio a la Innovación en CX 2024<br>
-                                • Certificación ISO 27001
-                            </v-expansion-panel-text>
-                        </v-expansion-panel>
-                    </v-expansion-panels>
                 </v-col>
 
                 <!-- Formulario de registro -->
@@ -108,9 +77,9 @@ onMounted(() => {
                             Pre-<span class="text-highlight">regístrate</span>
                         </h2>
                         <p class="form-subtitle mb-8">
-                            El evento es gratuito, pero los espacios son limitados.<br>
-                            Completa el formulario para iniciar tu registro.<br>
-                            Muy pronto recibirás más información para finalizar tu participación.
+                            El evento es <strong class="text-highlight">gratuito</strong>, pero los espacios son <strong>limitados</strong>.<br>
+                            <strong>Completa el formulario</strong> para iniciar tu registro.<br>
+                            Muy pronto recibirás <strong>más información</strong> para <strong class="text-highlight">finalizar tu participación</strong>.
                         </p>
 
                         <!-- Contenedor para el formulario de HubSpot -->
@@ -152,6 +121,23 @@ onMounted(() => {
     color: #666;
 }
 
+.map-container {
+    position: relative;
+    width: 100%;
+    height: 430px;
+    overflow: hidden;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.map-container iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
 .info-panels {
     background: transparent;
 }
@@ -176,6 +162,11 @@ onMounted(() => {
     background-color: #f8f8f8;
     padding: 48px;
     border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.register-form-wrapper:hover {
+    box-shadow: 0 4px 16px rgba(235, 28, 45, 0.06);
 }
 
 .form-title {
@@ -188,6 +179,14 @@ onMounted(() => {
     font-size: 16px;
     line-height: 1.6;
     color: #666;
+}
+
+.form-subtitle strong {
+    color: #000;
+}
+
+.location-address strong {
+    color: #000;
 }
 
 /* Estilos para el formulario de HubSpot */
@@ -230,6 +229,15 @@ onMounted(() => {
 @media (max-width: 960px) {
     .register-form-wrapper {
         padding: 32px 24px;
+    }
+
+    .map-container {
+        height: 400px;
+        margin-top: 24px;
+    }
+
+    .location-card {
+        padding: 24px;
     }
 }
 </style>

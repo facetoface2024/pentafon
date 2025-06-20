@@ -61,7 +61,7 @@ const scrollToSection = (sectionId: string) => {
                         class="px-4 text-white"
                         size="small"
                     >
-                        Regístrate
+                        Preregístrate
                     </v-btn>
                 </div>
 
@@ -120,7 +120,7 @@ const scrollToSection = (sectionId: string) => {
                 @click="scrollToSection('registro')"
                 prepend-icon="mdi-form-textbox"
             >
-                <v-list-item-title>Registro</v-list-item-title>
+                <v-list-item-title>Preregístro</v-list-item-title>
             </v-list-item>
         </v-list>
 
@@ -132,7 +132,7 @@ const scrollToSection = (sectionId: string) => {
                     rounded="pill"
                     @click="scrollToSection('registro')"
                 >
-                    Regístrate ahora
+                    Preregístrate ahora
                 </v-btn>
             </div>
         </template>

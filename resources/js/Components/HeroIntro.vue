@@ -15,27 +15,26 @@ const scrollToForm = () => {
             <v-row class="align-center ma-0" style="min-height: calc(100vh - 64px)">
                 <v-col cols="12" md="6" lg="6" class="pa-8 pa-md-12">
                     <h1 class="hero-title mb-6">
-                        Anticípate al futuro.<br>
-                        Lidera el cambio
+                        <span class="text-highlight">Anticípate</span> al futuro<br>
+                        <span class="text-highlight">Lidera</span> el cambio
                     </h1>
                     <p class="hero-description mb-4">
-                        Pentafon, en colaboración con Microsoft, te invita a un evento exclusivo diseñado
-                         para líderes que buscan transformar la forma en que se enfrentan
-                          los desafíos del mañana.
-
+                        <strong>Pentafon</strong>, en colaboración con <strong class="text-highlight">Microsoft</strong>, te invita a un evento <strong>exclusivo</strong> diseñado
+                         para <strong>líderes</strong> que buscan <strong class="text-bold">transformar</strong> la forma en que se enfrentan
+                          los <strong>desafíos del mañana</strong>.
                     </p>
                     <p class="event-info mb-8">
-                        📍 Evento presencial | <em>Cupo limitado</em>
+                        📍 <strong>Evento presencial</strong> | <em class="text-highlight">Cupo limitado</em>
                     </p>
                     <v-btn
                         color="#eb1c2d"
                         size="x-large"
                         rounded="pill"
                         @click="scrollToForm"
-                        class="px-8 text-white"
+                        class="px-8 text-white cta-button"
                         elevation="2"
                     >
-                        Regístrate ahora
+                        <strong>Preregístrate ahora</strong>
                     </v-btn>
                 </v-col>
 
@@ -76,10 +75,23 @@ const scrollToForm = () => {
     color: #000;
 }
 
+.text-highlight {
+    color: #eb1c2d;
+}
+
+.text-bold {
+    font-weight: 700;
+    color: #000;
+}
+
 .hero-description {
     font-size: 18px;
     line-height: 1.6;
     color: #333;
+}
+
+.hero-description strong {
+    color: #000;
 }
 
 .event-info {
@@ -153,5 +165,15 @@ const scrollToForm = () => {
     .hero-image-container {
         height: 100%;
     }
+}
+
+.cta-button {
+    transform: translateY(0);
+    transition: all 0.3s ease;
+}
+
+.cta-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(235, 28, 45, 0.3) !important;
 }
 </style>
