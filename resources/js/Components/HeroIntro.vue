@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import bannerImage from '../../images/banner.webp';
+import frase2Image from '../../images/frase-2.png';
 
 const scrollToForm = () => {
     const element = document.getElementById('registro');
@@ -14,10 +15,9 @@ const scrollToForm = () => {
         <v-container fluid class="pa-0">
             <v-row class="align-center ma-0" style="min-height: calc(100vh - 64px)">
                 <v-col cols="12" md="6" lg="6" class="pa-8 pa-md-12">
-                    <h1 class="hero-title mb-6">
-                        <span class="text-highlight">Anticípate</span> al futuro<br>
-                        <span class="text-highlight">Lidera</span> el cambio
-                    </h1>
+                    <div class="hero-title-image mb-6">
+                        <img :src="frase2Image" alt="Anticípate al FUTURO - LIDERA EL CAMBIO" class="title-image" />
+                    </div>
                     <p class="hero-description mb-4">
                         <strong>Pentafon</strong> y <strong class="text-highlight">Microsoft</strong> unen fuerzas para abrir un espacio donde la innovación deja de ser tendencia... y se convierte en estrategia.
                     </p>
@@ -75,6 +75,19 @@ const scrollToForm = () => {
     font-weight: 700;
     line-height: 1.2;
     color: #000;
+}
+
+.hero-title-image {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.title-image {
+    max-width: 100%;
+    height: auto;
+    width: auto;
+    max-height: 120px;
 }
 
 .text-highlight {

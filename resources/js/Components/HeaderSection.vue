@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import logoSvg from '../../images/logo.svg';
-import innovationSvg from '../../images/frase-2.png';
+import innovationSvg from '../../images/innovation.svg';
 
 const drawer = ref(false);
 
@@ -30,8 +30,8 @@ const scrollToSection = (sectionId: string) => {
                     <img :src="logoSvg" alt="Pentafon" class="logo-pentafon" />
                 </div>
 
-                <!-- Logo Innovation Day (centrado en desktop, oculto en tablet) -->
-                <div class="logo-innovation-wrapper d-none d-lg-flex">
+                <!-- Logo Innovation Day (centrado en desktop y tablet) -->
+                <div class="logo-innovation-wrapper d-none d-md-flex">
                     <img :src="innovationSvg" alt="Innovation Day 2025" class="logo-innovation" />
                 </div>
 
@@ -260,7 +260,7 @@ const scrollToSection = (sectionId: string) => {
 }
 
 /* Asegurar que en pantallas muy pequeñas no se encimen */
-@media (max-width: 1100px) {
+@media (max-width: 959px) {
     .logo-innovation-wrapper {
         display: none !important;
     }
