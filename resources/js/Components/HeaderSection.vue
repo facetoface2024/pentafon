@@ -61,7 +61,7 @@ const scrollToSection = (sectionId: string) => {
                         class="px-4 text-white"
                         size="small"
                     >
-                        Preregístrate
+                        Prerregístrate
                     </v-btn>
                 </div>
 
@@ -132,7 +132,7 @@ const scrollToSection = (sectionId: string) => {
                     rounded="pill"
                     @click="scrollToSection('registro')"
                 >
-                    Preregístrate ahora
+                    Prerregístrate ahora
                 </v-btn>
             </div>
         </template>

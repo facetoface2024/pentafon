@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import bannerImage from '../../images/banner.webp';
 import frase2Image from '../../images/frase-2.png';
+import backgroundWebImage from '../../images/background_web.jpg';
 
 const scrollToForm = () => {
     const element = document.getElementById('registro');
@@ -22,26 +23,28 @@ const scrollToForm = () => {
                         <strong>Pentafon</strong> y <strong class="text-highlight">Microsoft</strong> unen fuerzas para abrir un espacio donde la innovación deja de ser tendencia... y se convierte en estrategia.
                     </p>
                     <p class="hero-description mb-4">
-                        Explora cómo las megatendencias tecnológicas están redefiniendo <strong>los negocios, la experiencia del cliente y las decisiones estratégicas</strong> más audaces.<br>
-                        Un evento diseñado para líderes que no solo quieren adaptarse al futuro, sino construirlo.
+                        Explora cómo las megatendencias tecnológicas están redefiniendo <strong>los negocios, la experiencia del cliente y las decisiones estratégicas</strong> más audaces.
+                       <br> Un evento diseñado para líderes que no solo quieren adaptarse al futuro, sino construirlo.
                     </p>
                     <p class="event-info mb-8">
                         📍 <strong>Evento presencial</strong> | <em class="text-highlight">Cupo limitado</em>
                     </p>
-                    <v-btn
-                        color="#eb1c2d"
-                        size="x-large"
-                        rounded="pill"
-                        @click="scrollToForm"
-                        class="px-8 text-white cta-button"
-                        elevation="2"
-                    >
-                        <strong>Preregístrate ahora</strong>
-                    </v-btn>
+                    <div class="cta-button-container">
+                        <v-btn
+                            color="#eb1c2d"
+                            size="x-large"
+                            rounded="pill"
+                            @click="scrollToForm"
+                            class="px-8 text-white cta-button"
+                            elevation="2"
+                        >
+                            <strong>Prerregístrate ahora</strong>
+                        </v-btn>
+                    </div>
                 </v-col>
 
-                <!-- Imagen del banner -->
-                <v-col cols="12" md="6" lg="6" class="pa-0 hero-image-col">
+                <!-- Imagen del banner - Solo visible en móvil -->
+                <v-col cols="12" md="6" lg="6" class="pa-0 hero-image-col mobile-only">
                     <div class="hero-image-container">
                         <img
                             :src="bannerImage"
@@ -60,6 +63,18 @@ const scrollToForm = () => {
     position: relative;
     background-color: #fdfdfb;
     overflow-x: hidden;
+}
+
+/* Fondo para web/desktop */
+@media (min-width: 960px) {
+    .hero-section {
+        background-image: url('../../images/background_web.jpg');
+        background-size: max(100vw, calc(100vh * 1.7778)) max(calc(100vw * 0.5625), 100vh);
+        background-repeat: no-repeat;
+        background-position: center center;
+        background-attachment: scroll;
+        min-height: 100vh;
+    }
 }
 
 .innovation-text {
@@ -115,6 +130,18 @@ const scrollToForm = () => {
     color: #333;
 }
 
+.cta-button-container {
+    display: flex;
+    justify-content: flex-start;
+}
+
+/* Centrar botón solo en web/desktop */
+@media (min-width: 960px) {
+    .cta-button-container {
+        justify-content: center;
+    }
+}
+
 .hero-image-col {
     display: flex;
     align-items: flex-end;
@@ -136,10 +163,18 @@ const scrollToForm = () => {
     object-position: bottom right;
 }
 
-/* Estilos para móvil */
+/* Ocultar imagen en web/desktop */
+@media (min-width: 960px) {
+    .mobile-only {
+        display: none !important;
+    }
+}
+
+/* Estilos para móvil - mantener exactamente como estaba */
 @media (max-width: 959px) {
     .hero-section {
         overflow: visible;
+        background-image: none !important;
     }
 
     .hero-image-col {
@@ -163,22 +198,6 @@ const scrollToForm = () => {
         width: 100%;
         object-fit: fill;
         object-position: center bottom;
-    }
-}
-
-/* Estilos para escritorio */
-@media (min-width: 960px) {
-    .hero-image-col {
-        position: absolute;
-        right: 0;
-        bottom: 0;
-        height: calc(100vh - 64px);
-        width: 50%;
-        max-width: none;
-    }
-
-    .hero-image-container {
-        height: 100%;
     }
 }
 

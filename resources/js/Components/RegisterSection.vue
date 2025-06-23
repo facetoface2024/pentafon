@@ -42,11 +42,10 @@ onMounted(() => {
             <v-row>
                 <!-- Información y ubicación -->
                 <v-col cols="12" md="6" class="mb-8">
-                    <h2 class="section-title mb-8">
-                        <span class="text-highlight">Ubicación</span>
-                    </h2>
-
                     <div class="location-card mb-8">
+                        <h2 class="section-title mb-6">
+                            <span class="text-highlight">Ubicación</span>
+                        </h2>
                         <h3 class="location-title mb-2"><span class="text-highlight">INSPACE</span> CDMX</h3>
                         <p class="location-address">
                             <strong>C. J. Enrique Pestalozzi 35</strong>, Piedad Narvarte,<br>
