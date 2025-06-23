@@ -138,8 +138,14 @@ onMounted(() => {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
 
+        <!-- Preload recursos críticos -->
+        <link rel="preload" href="/images/logo.svg" as="image" type="image/svg+xml" />
+        <link rel="preload" href="/images/innovation.svg" as="image" type="image/svg+xml" />
+        <link rel="preload" href="/images/frase-2.png" as="image" type="image/png" />
+        <link rel="preload" href="/images/background_web.jpg" as="image" type="image/jpeg" media="(min-width: 960px)" />
+
         <!-- Canonical URL -->
-        <link rel="canonical" :href="seoConfig.ogUrl" />
+        <link rel="canonical" :href="seoConfig.ogUrl.split('#')[0]" />
 
         <!-- Hreflang para español -->
         <link rel="alternate" hreflang="es-mx" :href="seoConfig.ogUrl" />

@@ -13,9 +13,9 @@ import eje4Image from '../../images/eje_4.png';
         <v-container>
             <!-- Título principal -->
             <div class="text-center mb-12">
-                <h3 class="subsection-title">
+                <h2 class="subsection-title">
                     Ejes de <span class="text-highlight">conversación</span>
-                </h3>
+                </h2>
                 <p class="subtitle-description">
                     <strong>Cuatro perspectivas clave</strong> que definirán el <strong class="text-highlight">futuro de los negocios</strong>
                 </p>
@@ -26,10 +26,10 @@ import eje4Image from '../../images/eje_4.png';
                 <v-col cols="12" md="6" class="mb-6">
                     <div class="conversation-topic">
                         <div class="topic-image-header">
-                            <img :src="eje1Image" alt="¿Qué será considerado normal?" class="topic-image" />
+                            <img :src="eje1Image" alt="Tendencias y megatendencias que definirán el futuro normal de los negocios" class="topic-image" loading="lazy" />
                         </div>
                         <div class="topic-content">
-                            <h4 class="topic-title mb-3">¿Qué será <span class="text-highlight">"normal"</span> en los próximos 5 a 10 años?</h4>
+                            <h3 class="topic-title mb-3">¿Qué será <span class="text-highlight">"normal"</span> en los próximos 5 a 10 años?</h3>
                             <p class="topic-description">
                                 <strong>Tendencias</strong> clave que marcarán la nueva realidad de los <strong>negocios, la tecnología y la sociedad.</strong>
                             </p>
@@ -40,10 +40,10 @@ import eje4Image from '../../images/eje_4.png';
                 <v-col cols="12" md="6" class="mb-6">
                     <div class="conversation-topic">
                         <div class="topic-image-header">
-                            <img :src="eje2Image" alt="IA generativa, automatización y entornos inmersivos" class="topic-image" />
+                            <img :src="eje2Image" alt="Inteligencia artificial, automatización y tecnologías inmersivas transformando empresas" class="topic-image" loading="lazy" />
                         </div>
                         <div class="topic-content">
-                            <h4 class="topic-title mb-3"><span class="text-highlight">IA, automatización</span> y entornos inmersivos</h4>
+                            <h3 class="topic-title mb-3"><span class="text-highlight">IA, automatización</span> y entornos inmersivos</h3>
                             <p class="topic-description">
                                 Impacto real de <strong>tecnologías emergentes</strong> en los modelos de operación y relación con el cliente.
                             </p>
@@ -54,10 +54,10 @@ import eje4Image from '../../images/eje_4.png';
                 <v-col cols="12" md="6" class="mb-6">
                     <div class="conversation-topic">
                         <div class="topic-image-header">
-                            <img :src="eje3Image" alt="Riesgos y regulaciones de la IA" class="topic-image" />
+                            <img :src="eje3Image" alt="Riesgos éticos y regulaciones legales de la inteligencia artificial" class="topic-image" loading="lazy" />
                         </div>
                         <div class="topic-content">
-                            <h4 class="topic-title mb-3"><span class="text-highlight">Inteligencia artificial</span>: riesgos y regulaciones</h4>
+                            <h3 class="topic-title mb-3"><span class="text-highlight">Inteligencia artificial</span>: riesgos y regulaciones</h3>
                             <p class="topic-description">
                                 <strong>Sesgos, límites éticos y marcos legales</strong> que ya definen su adopción.
                             </p>
@@ -68,10 +68,10 @@ import eje4Image from '../../images/eje_4.png';
                 <v-col cols="12" md="6" class="mb-6">
                     <div class="conversation-topic">
                         <div class="topic-image-header">
-                            <img :src="eje4Image" alt="¿Cómo será tu cliente en 2030?" class="topic-image" />
+                            <img :src="eje4Image" alt="Evolución del cliente hacia 2030 y expectativas del consumidor futuro" class="topic-image" loading="lazy" />
                         </div>
                         <div class="topic-content">
-                            <h4 class="topic-title mb-3"><span class="text-highlight">Cliente 2030</span></h4>
+                            <h3 class="topic-title mb-3"><span class="text-highlight">Cliente 2030</span></h3>
                             <p class="topic-description">
                                 <strong>Cómo evolucionan las expectativas</strong>... y cómo superarlas desde hoy.
                             </p>

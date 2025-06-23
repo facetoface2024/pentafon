@@ -16,9 +16,9 @@ const scrollToForm = () => {
         <v-container fluid class="pa-0">
             <v-row class="align-center ma-0" style="min-height: calc(100vh - 64px)">
                 <v-col cols="12" md="6" lg="6" class="pa-8 pa-md-12">
-                    <div class="hero-title-image mb-6">
-                        <img :src="frase2Image" alt="Anticípate al FUTURO - LIDERA EL CAMBIO" class="title-image" />
-                    </div>
+                    <h1 class="hero-title-image mb-6">
+                        <img :src="frase2Image" alt="Innovation Day 2025 - Anticípate al futuro, lidera el cambio - Pentafon y Microsoft" class="title-image" loading="eager" fetchpriority="high" width="800" height="200" />
+                    </h1>
                     <p class="hero-description mb-4">
                         <strong>Pentafon</strong> y <strong class="text-highlight">Microsoft</strong> unen fuerzas para abrir un espacio donde la innovación deja de ser tendencia... y se convierte en estrategia.
                     </p>
@@ -50,6 +50,7 @@ const scrollToForm = () => {
                             :src="bannerImage"
                             alt="Innovation Day Banner"
                             class="hero-image"
+                            loading="lazy"
                         />
                     </div>
                 </v-col>

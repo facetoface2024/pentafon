@@ -27,12 +27,12 @@ const scrollToSection = (sectionId: string) => {
             <div class="header-content">
                 <!-- Logo Pentafon -->
                 <div class="logo-pentafon-wrapper">
-                    <img :src="logoSvg" alt="Pentafon" class="logo-pentafon" />
+                    <img :src="logoSvg" alt="Pentafon" class="logo-pentafon" loading="eager" fetchpriority="high" width="120" height="32" />
                 </div>
 
                 <!-- Logo Innovation Day (centrado en desktop y tablet) -->
                 <div class="logo-innovation-wrapper d-none d-md-flex">
-                    <img :src="innovationSvg" alt="Innovation Day 2025" class="logo-innovation" />
+                    <img :src="innovationSvg" alt="Innovation Day 2025" class="logo-innovation" loading="eager" width="200" height="48" />
                 </div>
 
                 <!-- Navigation Desktop -->
@@ -67,7 +67,7 @@ const scrollToSection = (sectionId: string) => {
 
                 <!-- Logo Innovation Day móvil (solo en móvil) -->
                 <div class="logo-innovation-mobile d-flex d-md-none">
-                    <img :src="innovationSvg" alt="Innovation Day 2025" class="logo-innovation-small" />
+                    <img :src="innovationSvg" alt="Innovation Day 2025" class="logo-innovation-small" loading="eager" width="180" height="50" />
                 </div>
 
                 <!-- Mobile menu button -->
@@ -89,7 +89,7 @@ const scrollToSection = (sectionId: string) => {
         <v-list>
             <v-list-item>
                 <div class="drawer-header">
-                    <img :src="logoSvg" alt="Pentafon" class="drawer-logo" />
+                    <img :src="logoSvg" alt="Pentafon" class="drawer-logo" loading="lazy" />
                 </div>
             </v-list-item>
 
