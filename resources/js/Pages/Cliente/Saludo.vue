@@ -266,22 +266,43 @@ const initThreeJS = async () => {
     scene = new THREE.Scene();
     scene.background = null; // Fondo transparente para mostrar el fondo de imagen
 
-    // Configurar cámara optimizada para orientación vertical
+    // Configurar cámara adaptativa para diferentes resoluciones verticales
     const aspect = robotContainer.value.clientWidth / robotContainer.value.clientHeight;
+    const containerHeight = robotContainer.value.clientHeight;
     const isVertical = aspect < 1; // Detectar si es vertical
 
+    // FOV adaptativo según resolución
+    let initialFOV;
+    if (isVertical) {
+        if (containerHeight <= 700) {
+            initialFOV = 70; // Móviles pequeños
+        } else if (containerHeight <= 900) {
+            initialFOV = 65; // Móviles grandes
+        } else {
+            initialFOV = aspect < 0.7 ? 68 : 60; // Pantallas grandes
+        }
+    } else {
+        initialFOV = 50; // Horizontal
+    }
+
     camera = new THREE.PerspectiveCamera(
-        isVertical ? 70 : 50, // FOV reducido 2 puntos para menos zoom
+        initialFOV,
         aspect,
         0.1,
         1000
     );
 
-    // Posición de cámara ajustada para robot grande (60% de pantalla) posicionado entre centro y pie
+    // Posición inicial de cámara adaptativa
     if (isVertical) {
-        camera.position.set(0, 0, 3.5); // Más cerca y ligeramente arriba para robot grande
+        if (containerHeight <= 700) {
+            camera.position.set(0, 0, 4.0); // Móviles pequeños - más lejos
+        } else if (containerHeight <= 900) {
+            camera.position.set(0, 0, 3.7); // Móviles grandes - intermedio
+        } else {
+            camera.position.set(0, 0, 3.5); // Pantallas grandes - cerca
+        }
     } else {
-        camera.position.set(0, 0, 4.0); // Ajustado para robot grande en horizontal
+        camera.position.set(0, 0, 4.0); // Horizontal - mantener
     }
 
     // Configurar renderer
@@ -336,38 +357,57 @@ const initThreeJS = async () => {
 
         console.log('Robot original - Centro:', center, 'Tamaño:', size);
 
-        // Detectar si es pantalla vertical para escalado optimizado
+        // Detectar si es pantalla vertical y su resolución para escalado adaptativo
         const containerAspect = robotContainer.value!.clientWidth / robotContainer.value!.clientHeight;
+        const containerHeight = robotContainer.value!.clientHeight;
+        const containerWidth = robotContainer.value!.clientWidth;
         const isVerticalScreen = containerAspect < 1;
 
-        // Escalado para que el robot ocupe al menos 60% de la pantalla
+        // Escalado adaptativo basado en resolución vertical
         let targetSize;
         let scale;
 
         if (isVerticalScreen) {
-            // Para pantallas verticales, robot debe ocupar 60% de la altura
-            targetSize = containerAspect < 0.7 ? 2 : 2; // Mucho más grande para 60% de pantalla
-            scale = targetSize / size.y; // Escalar basado en altura para aprovechar vertical
+            // Para pantallas verticales, ajustar según la altura real de la pantalla
+            if (containerHeight <= 700) {
+                // Móviles pequeños - robot más pequeño para que no se corte
+                targetSize = 1.4;
+            } else if (containerHeight <= 900) {
+                // Móviles grandes/tablets pequeñas
+                targetSize = 1.7;
+            } else {
+                // Pantallas verticales grandes - mantener tamaño actual
+                targetSize = 2;
+            }
+            scale = targetSize / size.y; // Escalar basado en altura para vertical
         } else {
-            // Para pantallas horizontales, robot debe ocupar 60% del espacio disponible
+            // Para pantallas horizontales, mantener configuración actual
             const maxDimension = Math.max(size.x, size.y, size.z);
-            targetSize = 3; // Mucho más grande para 60% de pantalla
+            targetSize = 3;
             scale = targetSize / maxDimension;
         }
 
         robot.scale.set(scale, scale, scale);
 
-        // Posicionar el robot entre el centro y el pie de página para aprovechar espacio
+        // Posicionamiento adaptativo del robot
         robot.position.x = 0;
         robot.position.z = 0;
 
-        // Posición Y entre centro (0) y pie de página para minimizar espacio vacío
+        // Posición Y adaptativa según resolución
         if (isVerticalScreen) {
-            // En vertical, posicionar en el tercio inferior para aprovechar espacio
-            robot.position.y = -1.2; // Entre centro y pie, más cerca del pie
+            if (containerHeight <= 700) {
+                // Móviles pequeños - posición más centrada
+                robot.position.y = -0.8;
+            } else if (containerHeight <= 900) {
+                // Móviles grandes - posición intermedia
+                robot.position.y = -1.0;
+            } else {
+                // Pantallas grandes - mantener posición actual
+                robot.position.y = -1.2;
+            }
         } else {
-            // En horizontal, posicionar en el tercio inferior
-            robot.position.y = -0.6; // Entre centro y pie, más cerca del pie
+            // Horizontal - mantener configuración actual
+            robot.position.y = -0.6;
         }
 
         // Asegurar que el robot esté completamente estático y mirando de frente
@@ -428,16 +468,26 @@ const initThreeJS = async () => {
         // Mantener target fijo en el centro para vista frontal
         controls.target.set(0, 0, 0); // Target ligeramente abajo para seguir al robot
 
-        // Configuración de cámara original para vista frontal
+        // Configuración de cámara adaptativa según resolución
         const currentAspect = robotContainer.value!.clientWidth / robotContainer.value!.clientHeight;
+        const currentHeight = robotContainer.value!.clientHeight;
         const isCurrentlyVertical = currentAspect < 1;
 
         if (isCurrentlyVertical) {
-            // Para pantallas verticales - ajustado para robot grande (60% de pantalla)
-            camera.position.set(0, 0, 2.5); // Posición actualizada para robot que ocupa 60% de pantalla
+            // Para pantallas verticales - ajustar distancia según resolución
+            if (currentHeight <= 700) {
+                // Móviles pequeños - cámara más lejos para ver robot completo
+                camera.position.set(0, 0, 3.5);
+            } else if (currentHeight <= 900) {
+                // Móviles grandes - distancia intermedia
+                camera.position.set(0, 0, 3.0);
+            } else {
+                // Pantallas grandes - mantener distancia actual
+                camera.position.set(0, 0, 2.5);
+            }
         } else {
-            // Para pantallas horizontales - ajustado para robot grande (60% de pantalla)
-            camera.position.set(0, 0, 3.0); // Posición actualizada para robot que ocupa 60% de pantalla
+            // Para pantallas horizontales - mantener configuración actual
+            camera.position.set(0, 0, 3.0);
         }
 
         controls.update();
@@ -482,7 +532,7 @@ const animate = () => {
     }
 };
 
-// Redimensionar optimizado para orientación vertical
+// Redimensionar adaptativo para diferentes resoluciones verticales
 const handleResize = () => {
     if (!robotContainer.value || !camera || !renderer) return;
 
@@ -494,22 +544,31 @@ const handleResize = () => {
     // Actualizar aspect ratio
     camera.aspect = newAspect;
 
-    // Ajustar FOV según orientación (reducido 2 puntos)
+    // Ajustar FOV según orientación y resolución
     if (isNowVertical) {
-        camera.fov = newAspect < 0.7 ? 63 : 58; // FOV reducido para móviles muy verticales
+        if (height <= 700) {
+            // Móviles pequeños - FOV más amplio para ver más contenido
+            camera.fov = 70;
+        } else if (height <= 900) {
+            // Móviles grandes - FOV intermedio
+            camera.fov = 65;
+        } else {
+            // Pantallas grandes - FOV actual
+            camera.fov = newAspect < 0.7 ? 68 : 60;
+        }
     } else {
-        camera.fov = 43; // FOV reducido para horizontales
+        camera.fov = 50; // Mantener para horizontales
     }
 
     camera.updateProjectionMatrix();
     renderer.setSize(width, height);
 
-    // Actualizar controles (sin configuración de zoom ya que está deshabilitado)
+    // Actualizar controles
     if (controls) {
         controls.update();
     }
 
-    console.log('Redimensionado - Nuevo aspecto:', newAspect, 'Vertical:', isNowVertical, 'Zoom deshabilitado');
+    console.log('Redimensionado adaptativo - Aspecto:', newAspect, 'Altura:', height, 'Vertical:', isNowVertical);
 };
 
 onMounted(async () => {
