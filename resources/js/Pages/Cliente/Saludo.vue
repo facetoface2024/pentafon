@@ -4,6 +4,7 @@ import { ref, onMounted, computed, nextTick } from 'vue';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import Preloader from '@/Components/Preloader.vue';
 
 const page = usePage();
 const baseUrl = computed(() => {
@@ -28,7 +29,6 @@ const props = defineProps<Props>();
 
 const isLoading = ref(true);
 const robotContainer = ref<HTMLElement>();
-const robotLoaded = ref(false);
 const showDialog = ref(false);
 const currentMessage = ref('');
 const animationFinished = ref(false);
@@ -458,7 +458,7 @@ const initThreeJS = async () => {
             console.log('Cabeza del robot determinada por posición más alta');
         }
 
-        robotLoaded.value = true;
+        // Robot cargado
 
                 // Ajustar cámara para mostrar el robot en la parte inferior
         const robotBox = new THREE.Box3().setFromObject(robot);
@@ -572,11 +572,6 @@ const handleResize = () => {
 };
 
 onMounted(async () => {
-    // Ocultar el preloader después de 2 segundos
-    setTimeout(() => {
-        isLoading.value = false;
-    }, 2000);
-
     // Inicializar Three.js después de que el DOM esté listo
     await nextTick();
     if (robotContainer.value) {
@@ -586,9 +581,14 @@ onMounted(async () => {
         // Event listeners
         window.addEventListener('resize', handleResize);
 
+        // Ocultar el preloader después de que todo esté cargado
+        setTimeout(() => {
+            isLoading.value = false;
+        }, 3000);
+
         // Mostrar mensaje random cada 10 segundos
         setInterval(() => {
-            if (robotLoaded.value) {
+            if (!isLoading.value) {
                 showRandomMessage();
             }
         }, 10000);
@@ -611,20 +611,7 @@ onMounted(async () => {
     </Head>
 
     <v-app>
-        <!-- Preloader personalizado -->
-        <v-overlay v-model="isLoading" class="align-center justify-center">
-            <div class="text-center">
-                <v-progress-circular
-                    color="primary"
-                    indeterminate
-                    size="64"
-                    width="6"
-                ></v-progress-circular>
-                <p class="tw-mt-4 tw-text-lg tw-text-gray-600">
-                    Preparando tu saludo personalizado...
-                </p>
-            </div>
-        </v-overlay>
+        <Preloader :is-loading="isLoading" @loaded="handleLoaded" />
 
         <v-main>
             <!-- Contenedor principal con fondo completo -->
@@ -653,14 +640,6 @@ onMounted(async () => {
                     class="robot-container-fullscreen"
                     @click="showRandomMessage"
                 >
-                    <div v-if="!robotLoaded" class="robot-loading">
-                        <v-progress-circular
-                            indeterminate
-                            color="primary"
-                            size="64"
-                        ></v-progress-circular>
-                        <p class="tw-mt-4 tw-text-gray-600 tw-text-lg">Cargando robot...</p>
-                    </div>
                 </div>
             </div>
         </v-main>
@@ -758,17 +737,7 @@ onMounted(async () => {
     box-sizing: border-box;
 }
 
-.robot-loading {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    color: #666;
-    z-index: 3;
-}
+
 
 .robot-container-fullscreen canvas {
     border-radius: 0;
