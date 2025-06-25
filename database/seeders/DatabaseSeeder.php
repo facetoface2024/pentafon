@@ -19,5 +19,10 @@ class DatabaseSeeder extends Seeder
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]);
+
+        // Ejecutar seeder de clientes para el sistema QR
+        $this->call([
+            ClienteSeeder::class,
+        ]);
     }
 }

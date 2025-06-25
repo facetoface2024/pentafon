@@ -1,0 +1,309 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Cliente;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
+
+class SistemaQrController extends Controller
+{
+    public function index()
+    {
+        $clientes = Cliente::orderBy('created_at', 'desc')->get();
+
+        return Inertia::render('Dashboard', [
+            'clientes' => $clientes->map(function ($cliente) {
+                return [
+                    'id' => $cliente->id,
+                    'nombre' => $cliente->nombre,
+                    'apellido_paterno' => $cliente->apellido_paterno,
+                    'apellido_materno' => $cliente->apellido_materno,
+                    'correo' => $cliente->correo,
+                    'nombre_completo' => $cliente->nombre_completo,
+                    'qr_path' => $cliente->qr_path,
+                    'qr_token' => $cliente->qr_token,
+                    'qr_activo' => $cliente->qr_activo,
+                    'qr_url' => $cliente->qr_url,
+                    'created_at' => $cliente->created_at->format('d/m/Y H:i'),
+                ];
+            })
+        ]);
+    }
+
+    public function descargarPlantilla()
+    {
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Encabezados
+        $sheet->setCellValue('A1', 'Nombre');
+        $sheet->setCellValue('B1', 'Apellido Paterno');
+        $sheet->setCellValue('C1', 'Apellido Materno');
+        $sheet->setCellValue('D1', 'Correo');
+
+        // Estilos para encabezados
+        $sheet->getStyle('A1:D1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:D1')->getFill()
+            ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+            ->getStartColor()->setARGB('FFE2E8F0');
+
+        // Autoajustar columnas
+        foreach (range('A', 'D') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $writer = new Xlsx($spreadsheet);
+        $filename = 'plantilla_clientes_' . date('Y-m-d_H-i-s') . '.xlsx';
+        $temp_file = tempnam(sys_get_temp_dir(), $filename);
+
+        $writer->save($temp_file);
+
+        return response()->download($temp_file, $filename)->deleteFileAfterSend(true);
+    }
+
+    public function subirExcel(Request $request)
+    {
+        $request->validate([
+            'archivo' => 'required|file|mimes:xlsx,xls|max:2048'
+        ]);
+
+        try {
+            $file = $request->file('archivo');
+            $spreadsheet = IOFactory::load($file->getPathname());
+            $sheet = $spreadsheet->getActiveSheet();
+            $rows = $sheet->toArray();
+
+            // Omitir la primera fila (encabezados)
+            array_shift($rows);
+
+            $clientesCreados = 0;
+            $errores = [];
+
+            foreach ($rows as $index => $row) {
+                // Validar que la fila no esté vacía
+                if (empty(array_filter($row))) {
+                    continue;
+                }
+
+                $nombre = trim($row[0] ?? '');
+                $apellidoPaterno = trim($row[1] ?? '');
+                $apellidoMaterno = trim($row[2] ?? '');
+                $correo = trim($row[3] ?? '');
+
+                // Validaciones básicas
+                if (empty($nombre) || empty($apellidoPaterno) || empty($apellidoMaterno) || empty($correo)) {
+                    $errores[] = "Fila " . ($index + 2) . ": Todos los campos son obligatorios";
+                    continue;
+                }
+
+                if (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+                    $errores[] = "Fila " . ($index + 2) . ": Correo inválido: {$correo}";
+                    continue;
+                }
+
+                // Verificar si el correo ya existe
+                if (Cliente::where('correo', $correo)->exists()) {
+                    $errores[] = "Fila " . ($index + 2) . ": El correo {$correo} ya existe";
+                    continue;
+                }
+
+                try {
+                    Cliente::create([
+                        'nombre' => $nombre,
+                        'apellido_paterno' => $apellidoPaterno,
+                        'apellido_materno' => $apellidoMaterno,
+                        'correo' => $correo,
+                    ]);
+                    $clientesCreados++;
+                } catch (\Exception $e) {
+                    $errores[] = "Fila " . ($index + 2) . ": Error al crear cliente: " . $e->getMessage();
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => "Se importaron {$clientesCreados} clientes correctamente",
+                'errores' => $errores,
+                'clientes_creados' => $clientesCreados
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al procesar el archivo: ' . $e->getMessage()
+            ], 422);
+        }
+    }
+
+    public function generarQr($id)
+    {
+        $cliente = Cliente::findOrFail($id);
+
+        try {
+            // Solo marcamos que el QR está listo
+            // El QR se generará en el frontend usando JavaScript
+            $qrPath = 'qr_codes/cliente_' . $cliente->id . '_' . time() . '.svg';
+
+            // Actualizar cliente con la ruta donde se guardará el QR
+            $cliente->update([
+                'qr_path' => $qrPath
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Código QR preparado exitosamente',
+                'qr_url' => $cliente->qr_url,
+                'cliente' => [
+                    'id' => $cliente->id,
+                    'qr_url' => $cliente->qr_url,
+                    'qr_path' => $qrPath,
+                    'nombre_completo' => $cliente->nombre_completo
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al preparar QR: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function saludoCliente($token)
+    {
+        $cliente = Cliente::where('qr_token', $token)
+                         ->where('qr_activo', true)
+                         ->first();
+
+        if (!$cliente) {
+            abort(404, 'Cliente no encontrado o QR inactivo');
+        }
+
+        return Inertia::render('Cliente/Saludo', [
+            'cliente' => [
+                'nombre_completo' => $cliente->nombre_completo,
+                'nombre' => $cliente->nombre,
+                'apellido_paterno' => $cliente->apellido_paterno,
+                'apellido_materno' => $cliente->apellido_materno,
+                'correo' => $cliente->correo,
+            ]
+        ]);
+    }
+
+    public function scanner()
+    {
+        return Inertia::render('Cliente/Scanner');
+    }
+
+    public function toggleQrEstado($id)
+    {
+        $cliente = Cliente::findOrFail($id);
+        $cliente->update([
+            'qr_activo' => !$cliente->qr_activo
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Estado del QR actualizado',
+            'qr_activo' => $cliente->qr_activo
+        ]);
+    }
+
+    public function eliminarCliente($id)
+    {
+        $cliente = Cliente::findOrFail($id);
+
+        // Eliminar archivo QR si existe
+        if ($cliente->qr_path && Storage::disk('public')->exists($cliente->qr_path)) {
+            Storage::disk('public')->delete($cliente->qr_path);
+        }
+
+        $cliente->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Cliente eliminado correctamente'
+        ]);
+    }
+
+        public function guardarQr(Request $request)
+    {
+        $request->validate([
+            'cliente_id' => 'required|exists:clientes,id',
+            'svg_content' => 'required|string',
+            'qr_path' => 'required|string'
+        ]);
+
+        try {
+            $cliente = Cliente::findOrFail($request->cliente_id);
+
+            // Guardar el SVG en storage
+            Storage::disk('public')->put($request->qr_path, $request->svg_content);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'QR guardado exitosamente',
+                'qr_path' => Storage::url($request->qr_path)
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al guardar QR: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function exportarClientes()
+    {
+        $clientes = Cliente::orderBy('created_at', 'desc')->get();
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Encabezados
+        $headers = ['ID', 'Nombre', 'Apellido Paterno', 'Apellido Materno', 'Correo', 'QR Activo', 'Fecha Creación'];
+        $columns = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+        foreach ($headers as $index => $header) {
+            $sheet->setCellValue($columns[$index] . '1', $header);
+        }
+
+        // Datos
+        foreach ($clientes as $index => $cliente) {
+            $row = $index + 2;
+            $sheet->setCellValue('A' . $row, $cliente->id);
+            $sheet->setCellValue('B' . $row, $cliente->nombre);
+            $sheet->setCellValue('C' . $row, $cliente->apellido_paterno);
+            $sheet->setCellValue('D' . $row, $cliente->apellido_materno);
+            $sheet->setCellValue('E' . $row, $cliente->correo);
+            $sheet->setCellValue('F' . $row, $cliente->qr_activo ? 'Activo' : 'Inactivo');
+            $sheet->setCellValue('G' . $row, $cliente->created_at->format('d/m/Y H:i'));
+        }
+
+        // Estilos
+        $sheet->getStyle('A1:G1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:G1')->getFill()
+            ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+            ->getStartColor()->setARGB('FFE2E8F0');
+
+        // Autoajustar columnas
+        foreach (range('A', 'G') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $writer = new Xlsx($spreadsheet);
+        $filename = 'clientes_' . date('Y-m-d_H-i-s') . '.xlsx';
+        $temp_file = tempnam(sys_get_temp_dir(), $filename);
+
+        $writer->save($temp_file);
+
+        return response()->download($temp_file, $filename)->deleteFileAfterSend(true);
+    }
+}
