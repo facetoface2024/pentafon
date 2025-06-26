@@ -73,6 +73,77 @@ const exportarClientes = () => {
     window.open('/exportar-clientes', '_blank');
 };
 
+const descargarTodosQr = async () => {
+    loading.value = true;
+    try {
+        // 1. Obtener lista de clientes activos
+        const response = await fetch('/generar-todos-qr', {
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+            },
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+            mostrarSnackbar(`❌ ${data.message}`, 'error');
+            return;
+        }
+
+        // 2. Generar QR para cada cliente que no lo tenga
+        const clientesSinQr = data.clientes.filter((cliente: any) => !cliente.qr_path);
+
+        if (clientesSinQr.length > 0) {
+            mostrarSnackbar(`🔄 Generando ${clientesSinQr.length} códigos QR...`, 'info');
+
+            // Generar QR para cada cliente
+            for (const cliente of clientesSinQr) {
+                try {
+                    // Preparar el QR en el backend
+                    const qrResponse = await fetch(`/generar-qr/${cliente.id}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                        },
+                    });
+
+                    const qrData = await qrResponse.json();
+
+                    if (qrData.success) {
+                        // Generar QR SVG en el frontend
+                        const qrSvg = await QRCode.toString(qrData.qr_url, {
+                            type: 'svg',
+                            width: 300,
+                            margin: 2,
+                            color: {
+                                dark: '#000000',
+                                light: '#FFFFFF'
+                            }
+                        });
+
+                        // Guardar el SVG en el storage
+                        await guardarQrEnStorage(cliente.id, qrSvg, qrData.cliente.qr_path);
+                    }
+                } catch (error) {
+                    console.error(`Error generando QR para ${cliente.correo}:`, error);
+                }
+            }
+
+            mostrarSnackbar('✅ Códigos QR generados exitosamente', 'success');
+        }
+
+        // 3. Descargar el ZIP
+        window.open('/descargar-todos-qr', '_blank');
+
+    } catch (error) {
+        mostrarSnackbar('❌ Error al preparar descarga masiva', 'error');
+        console.error('Error:', error);
+    } finally {
+        loading.value = false;
+    }
+};
+
 const abrirDialogoArchivo = () => {
     fileInput.value?.click();
 };
@@ -270,9 +341,9 @@ const descargarQr = async (cliente: Cliente) => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        // Detectar extensión del archivo
+        // Usar el correo como nombre del archivo
         const extension = cliente.qr_path.split('.').pop() || 'svg';
-        a.download = `qr_${cliente.nombre_completo.replace(/\s+/g, '_')}.${extension}`;
+        a.download = `${cliente.correo}.${extension}`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
@@ -301,7 +372,7 @@ const generarYDescargarQr = async (cliente: Cliente) => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `qr_${cliente.nombre_completo.replace(/\s+/g, '_')}.svg`;
+        a.download = `${cliente.correo}.svg`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
@@ -409,7 +480,7 @@ onMounted(() => {
                                 </v-card-title>
                                 <v-card-text>
                                     <v-row>
-                                        <v-col cols="12" md="3">
+                                        <v-col cols="12" md="2">
                                             <v-btn
                                                 color="primary"
                                                 variant="elevated"
@@ -420,7 +491,7 @@ onMounted(() => {
                                                 Descargar Plantilla
                                             </v-btn>
                                         </v-col>
-                                        <v-col cols="12" md="3">
+                                        <v-col cols="12" md="2">
                                             <v-btn
                                                 color="success"
                                                 variant="elevated"
@@ -431,7 +502,7 @@ onMounted(() => {
                                                 Subir Excel
                                             </v-btn>
                                         </v-col>
-                                        <v-col cols="12" md="3">
+                                        <v-col cols="12" md="2">
                                             <v-btn
                                                 color="warning"
                                                 variant="elevated"
@@ -442,7 +513,7 @@ onMounted(() => {
                                                 Exportar Clientes
                                             </v-btn>
                                         </v-col>
-                                        <v-col cols="12" md="3">
+                                        <v-col cols="12" md="2">
                                             <v-btn
                                                 color="purple"
                                                 variant="elevated"
@@ -451,6 +522,18 @@ onMounted(() => {
                                                 block
                                             >
                                                 Escanear QR
+                                            </v-btn>
+                                        </v-col>
+                                        <v-col cols="12" md="2">
+                                            <v-btn
+                                                color="teal"
+                                                variant="elevated"
+                                                prepend-icon="mdi-download-multiple"
+                                                @click="descargarTodosQr"
+                                                :loading="loading"
+                                                block
+                                            >
+                                                Descargar ZIP QR
                                             </v-btn>
                                         </v-col>
                                     </v-row>
@@ -608,7 +691,7 @@ onMounted(() => {
                     </div>
                     <p class="tw-text-sm tw-text-gray-600">
                         Asegúrate de que el archivo Excel tenga las columnas:
-                        <strong>Nombre, Apellido Paterno, Apellido Materno, Correo</strong>
+                        <strong>Nombre (obligatorio), Apellido Paterno (opcional), Apellido Materno (opcional), Correo (obligatorio)</strong>
                     </p>
                 </v-card-text>
                 <v-card-actions>

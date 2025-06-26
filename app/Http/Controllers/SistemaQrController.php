@@ -11,6 +11,7 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use ZipArchive;
 
 class SistemaQrController extends Controller
 {
@@ -97,9 +98,9 @@ class SistemaQrController extends Controller
                 $apellidoMaterno = trim($row[2] ?? '');
                 $correo = trim($row[3] ?? '');
 
-                // Validaciones básicas
-                if (empty($nombre) || empty($apellidoPaterno) || empty($apellidoMaterno) || empty($correo)) {
-                    $errores[] = "Fila " . ($index + 2) . ": Todos los campos son obligatorios";
+                // Validaciones básicas - solo nombre y correo son obligatorios
+                if (empty($nombre) || empty($correo)) {
+                    $errores[] = "Fila " . ($index + 2) . ": Nombre y correo son obligatorios";
                     continue;
                 }
 
@@ -117,8 +118,8 @@ class SistemaQrController extends Controller
                 try {
                     Cliente::create([
                         'nombre' => $nombre,
-                        'apellido_paterno' => $apellidoPaterno,
-                        'apellido_materno' => $apellidoMaterno,
+                        'apellido_paterno' => $apellidoPaterno ?: null,
+                        'apellido_materno' => $apellidoMaterno ?: null,
                         'correo' => $correo,
                     ]);
                     $clientesCreados++;
@@ -149,7 +150,8 @@ class SistemaQrController extends Controller
         try {
             // Solo marcamos que el QR está listo
             // El QR se generará en el frontend usando JavaScript
-            $qrPath = 'qr_codes/cliente_' . $cliente->id . '_' . time() . '.svg';
+            $correoLimpio = str_replace(['@', '.', ' '], ['_', '_', '_'], $cliente->correo);
+            $qrPath = 'qr_codes/' . $correoLimpio . '.svg';
 
             // Actualizar cliente con la ruta donde se guardará el QR
             $cliente->update([
@@ -306,4 +308,88 @@ class SistemaQrController extends Controller
 
         return response()->download($temp_file, $filename)->deleteFileAfterSend(true);
     }
+
+            public function generarTodosQr()
+    {
+        $clientes = Cliente::where('qr_activo', true)->get();
+
+        return response()->json([
+            'success' => true,
+            'clientes' => $clientes->map(function ($cliente) {
+                return [
+                    'id' => $cliente->id,
+                    'correo' => $cliente->correo,
+                    'qr_url' => $cliente->qr_url,
+                    'qr_path' => $cliente->qr_path
+                ];
+            })
+        ]);
+    }
+
+    public function descargarTodosQr()
+    {
+        $clientes = Cliente::where('qr_activo', true)->get();
+
+        if ($clientes->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No hay clientes con QR activos para descargar'
+            ], 400);
+        }
+
+        try {
+            // Crear archivo ZIP temporal
+            $zipPath = tempnam(sys_get_temp_dir(), 'qr_codes') . '.zip';
+            $zip = new ZipArchive();
+
+            if ($zip->open($zipPath, ZipArchive::CREATE) !== TRUE) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se pudo crear el archivo ZIP'
+                ], 500);
+            }
+
+            $clientesSinQr = [];
+
+            foreach ($clientes as $cliente) {
+                // Verificar si el cliente tiene QR guardado
+                if ($cliente->qr_path && Storage::disk('public')->exists($cliente->qr_path)) {
+                    // Usar el QR existente
+                    $qrContent = Storage::disk('public')->get($cliente->qr_path);
+
+                    // Nombre del archivo usando el correo
+                    $nombreArchivo = $cliente->correo . '.svg';
+
+                    // Agregar al ZIP
+                    $zip->addFromString($nombreArchivo, $qrContent);
+                } else {
+                    // Agregar a la lista de clientes sin QR
+                    $clientesSinQr[] = $cliente->correo;
+                }
+            }
+
+            $zip->close();
+
+            if (count($clientesSinQr) > 0) {
+                // Si hay clientes sin QR, devolver error informativo
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Algunos clientes no tienen QR generado. Por favor, genera los QR primero.',
+                    'clientes_sin_qr' => $clientesSinQr
+                ], 400);
+            }
+
+            $filename = 'codigos_qr_' . date('Y-m-d_H-i-s') . '.zip';
+
+            return response()->download($zipPath, $filename)->deleteFileAfterSend(true);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al generar ZIP: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+
 }

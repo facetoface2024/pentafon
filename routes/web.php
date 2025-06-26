@@ -34,6 +34,8 @@ Route::middleware('auth')->group(function () {
     Route::patch('/toggle-qr/{id}', [SistemaQrController::class, 'toggleQrEstado'])->name('clientes.toggle-qr');
     Route::delete('/clientes/{id}', [SistemaQrController::class, 'eliminarCliente'])->name('clientes.eliminar');
     Route::get('/exportar-clientes', [SistemaQrController::class, 'exportarClientes'])->name('clientes.exportar');
+    Route::get('/generar-todos-qr', [SistemaQrController::class, 'generarTodosQr'])->name('clientes.generar-todos-qr');
+    Route::get('/descargar-todos-qr', [SistemaQrController::class, 'descargarTodosQr'])->name('clientes.descargar-todos-qr');
     Route::get('/scanner', [SistemaQrController::class, 'scanner'])->name('qr.scanner');
 });
 

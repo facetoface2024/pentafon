@@ -37,7 +37,11 @@ class Cliente extends Model
 
     public function getNombreCompletoAttribute()
     {
-        return "{$this->nombre} {$this->apellido_paterno} {$this->apellido_materno}";
+        $nombre = $this->nombre;
+        $apellido_paterno = $this->apellido_paterno ?? '';
+        $apellido_materno = $this->apellido_materno ?? '';
+
+        return trim("{$nombre} {$apellido_paterno} {$apellido_materno}");
     }
 
     public function getQrUrlAttribute()
