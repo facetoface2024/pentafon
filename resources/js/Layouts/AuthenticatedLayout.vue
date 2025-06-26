@@ -39,12 +39,7 @@ const showingNavigationDropdown = ref(false);
                                 >
                                     Dashboard
                                 </NavLink>
-                                <NavLink
-                                    :href="route('planes')"
-                                    :active="route().current('planes')"
-                                >
-                                    Planes
-                                </NavLink>
+
                             </div>
                         </div>
 
@@ -150,12 +145,7 @@ const showingNavigationDropdown = ref(false);
                         >
                             Dashboard
                         </ResponsiveNavLink>
-                        <ResponsiveNavLink
-                            :href="route('planes')"
-                            :active="route().current('planes')"
-                        >
-                            Planes
-                        </ResponsiveNavLink>
+                      
                     </div>
 
                     <!-- Responsive Settings Options -->

@@ -37,22 +37,7 @@ const scrollToSection = (sectionId: string) => {
 
                 <!-- Navigation Desktop -->
                 <div class="navigation-wrapper d-none d-md-flex">
-                 <!--    <v-btn
-                        variant="text"
-                        @click="scrollToSection('agenda')"
-                        class="text-grey-darken-3"
-                        size="small"
-                    >
-                        Agenda
-                    </v-btn>
-                    <v-btn
-                        variant="text"
-                        @click="scrollToSection('speakers')"
-                        class="text-grey-darken-3"
-                        size="small"
-                    >
-                        Speakers
-                    </v-btn> -->
+               
                     <v-btn
                         color="#eb1c2d"
                         variant="flat"
