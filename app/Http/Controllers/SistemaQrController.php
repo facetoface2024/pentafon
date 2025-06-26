@@ -117,12 +117,18 @@ class SistemaQrController extends Controller
                 }
 
                 try {
-                    Cliente::create([
+                    $cliente = Cliente::create([
                         'nombre' => $nombre,
                         'apellido_paterno' => $apellidoPaterno ?: null,
                         'apellido_materno' => $apellidoMaterno ?: null,
                         'correo' => $correo,
                     ]);
+
+                    // Generar QR automáticamente
+                    $correoLimpio = str_replace(['@', '.', ' '], ['_', '_', '_'], $cliente->correo);
+                    $qrPath = 'qr_codes/' . $correoLimpio . '.svg';
+                    $cliente->update(['qr_path' => $qrPath]);
+
                     $clientesCreados++;
                 } catch (\Exception $e) {
                     $errores[] = "Fila " . ($index + 2) . ": Error al crear cliente: " . $e->getMessage();
@@ -131,9 +137,10 @@ class SistemaQrController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => "Se importaron {$clientesCreados} clientes correctamente",
+                'message' => "Se importaron {$clientesCreados} clientes correctamente. Los QR se generarán automáticamente en el frontend.",
                 'errores' => $errores,
-                'clientes_creados' => $clientesCreados
+                'clientes_creados' => $clientesCreados,
+                'generar_qr_frontend' => true
             ]);
 
         } catch (\Exception $e) {
@@ -333,14 +340,14 @@ class SistemaQrController extends Controller
         ]);
     }
 
-    public function descargarTodosQr()
+        public function descargarTodosQr()
     {
         $clientes = Cliente::where('qr_activo', true)->get();
 
         if ($clientes->isEmpty()) {
             return response()->json([
                 'success' => false,
-                'message' => 'No hay clientes con QR activos para descargar'
+                'message' => 'No hay clientes activos para descargar'
             ], 400);
         }
 
@@ -356,6 +363,7 @@ class SistemaQrController extends Controller
                 ], 500);
             }
 
+            $agregados = 0;
             $clientesSinQr = [];
 
             foreach ($clientes as $cliente) {
@@ -369,6 +377,7 @@ class SistemaQrController extends Controller
 
                     // Agregar al ZIP
                     $zip->addFromString($nombreArchivo, $qrContent);
+                    $agregados++;
                 } else {
                     // Agregar a la lista de clientes sin QR
                     $clientesSinQr[] = $cliente->correo;
@@ -377,17 +386,12 @@ class SistemaQrController extends Controller
 
             $zip->close();
 
-            // Registro de información para debugging
-            if (count($clientesSinQr) > 0) {
-                Log::info('Clientes sin QR encontrados:', $clientesSinQr);
-
-                // Si hay clientes sin QR, devolver error informativo
+            // Si no se agregó ningún QR, devolver error
+            if ($agregados === 0) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Algunos clientes no tienen QR generado. Esto puede suceder si los QR no se guardaron correctamente.',
-                    'clientes_sin_qr' => $clientesSinQr,
-                    'total_clientes' => $clientes->count(),
-                    'clientes_con_qr' => $clientes->count() - count($clientesSinQr)
+                    'message' => 'No se encontraron códigos QR generados. Por favor, asegúrate de que los clientes tengan QR.',
+                    'clientes_sin_qr' => $clientesSinQr
                 ], 400);
             }
 

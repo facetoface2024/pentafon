@@ -55,7 +55,7 @@ const headers = [
     { title: 'Correo', key: 'correo', sortable: true },
     { title: 'QR Estado', key: 'qr_activo', width: '120px' },
     { title: 'Fecha Creación', key: 'created_at', width: '150px' },
-    { title: 'Acciones', key: 'actions', sortable: false, width: '250px' }
+    { title: 'Acciones', key: 'actions', sortable: false, width: '200px' }
 ];
 
 // Methods
@@ -73,10 +73,9 @@ const exportarClientes = () => {
     window.open('/exportar-clientes', '_blank');
 };
 
-const descargarTodosQr = async () => {
-    loading.value = true;
+const generarQrTodosClientes = async () => {
     try {
-        // 1. Obtener lista de clientes activos
+        // Obtener lista de clientes activos que necesitan QR
         const response = await fetch('/generar-todos-qr', {
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
@@ -87,23 +86,20 @@ const descargarTodosQr = async () => {
 
         if (!data.success) {
             mostrarSnackbar(`❌ ${data.message}`, 'error');
+            router.reload();
             return;
         }
 
-        // 2. Generar QR para cada cliente que no lo tenga
+        // Generar QR para cada cliente que no lo tenga
         const clientesSinQr = data.clientes.filter((cliente: any) => !cliente.qr_path);
 
         if (clientesSinQr.length > 0) {
-            mostrarSnackbar(`🔄 Generando ${clientesSinQr.length} códigos QR automáticamente...`, 'info');
-
             let exitosos = 0;
             let errores = 0;
 
             // Generar QR para cada cliente
             for (const cliente of clientesSinQr) {
                 try {
-                    console.log(`Generando QR para: ${cliente.correo}`);
-
                     // Preparar el QR en el backend
                     const qrResponse = await fetch(`/generar-qr/${cliente.id}`, {
                         method: 'POST',
@@ -130,37 +126,46 @@ const descargarTodosQr = async () => {
                         // Guardar el SVG en el storage
                         await guardarQrEnStorage(cliente.id, qrSvg, qrData.cliente.qr_path);
                         exitosos++;
-                        console.log(`✅ QR generado para: ${cliente.correo}`);
                     } else {
-                        console.error(`❌ Error QR para ${cliente.correo}:`, qrData.message);
                         errores++;
                     }
                 } catch (error) {
-                    console.error(`❌ Excepción generando QR para ${cliente.correo}:`, error);
+                    console.error(`Error generando QR para ${cliente.correo}:`, error);
                     errores++;
                 }
             }
 
             if (exitosos > 0) {
-                mostrarSnackbar(`✅ ${exitosos} códigos QR generados exitosamente`, 'success');
+                mostrarSnackbar(`✅ ${exitosos} códigos QR generados automáticamente`, 'success');
             }
             if (errores > 0) {
                 mostrarSnackbar(`⚠️ ${errores} errores al generar QR`, 'warning');
             }
         }
 
-        // 3. Pequeña pausa para asegurar que todo se guarde
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Recargar la página para mostrar los cambios
+        router.reload();
 
-        // 4. Descargar el ZIP
-        console.log('Iniciando descarga del ZIP...');
+    } catch (error) {
+        mostrarSnackbar('❌ Error al generar QR automáticamente', 'error');
+        console.error('Error:', error);
+        router.reload();
+    }
+};
+
+const descargarTodosQr = async () => {
+    loading.value = true;
+    try {
+        mostrarSnackbar('🔄 Preparando descarga de códigos QR...', 'info');
+
+        // Descargar el ZIP directamente
         const downloadResponse = await fetch('/descargar-todos-qr');
 
         if (!downloadResponse.ok) {
             const errorData = await downloadResponse.json();
             mostrarSnackbar(`❌ ${errorData.message}`, 'error');
-            if (errorData.clientes_sin_qr) {
-                console.log('Clientes sin QR aún:', errorData.clientes_sin_qr);
+            if (errorData.clientes_sin_qr && errorData.clientes_sin_qr.length > 0) {
+                mostrarSnackbar(`ℹ️ ${errorData.clientes_sin_qr.length} clientes sin QR. Esto puede ocurrir si son muy recientes.`, 'warning');
             }
             return;
         }
@@ -179,7 +184,7 @@ const descargarTodosQr = async () => {
         mostrarSnackbar('✅ ZIP descargado exitosamente', 'success');
 
     } catch (error) {
-        mostrarSnackbar('❌ Error al preparar descarga masiva', 'error');
+        mostrarSnackbar('❌ Error al descargar ZIP', 'error');
         console.error('Error:', error);
     } finally {
         loading.value = false;
@@ -221,7 +226,17 @@ const subirArchivo = async () => {
             if (data.errores && data.errores.length > 0) {
                 console.warn('Errores encontrados:', data.errores);
             }
-            router.reload();
+
+            // Si se indica que se deben generar QR en el frontend
+            if (data.generar_qr_frontend && data.clientes_creados > 0) {
+                mostrarSnackbar(`🔄 Generando ${data.clientes_creados} códigos QR automáticamente...`, 'info');
+                // Esperar un poco y luego generar QR para todos los clientes nuevos
+                setTimeout(async () => {
+                    await generarQrTodosClientes();
+                }, 1000);
+            } else {
+                router.reload();
+            }
         } else {
             mostrarSnackbar(`❌ ${data.message}`, 'error');
         }
@@ -631,20 +646,6 @@ onMounted(() => {
 
                                     <template #item.actions="{ item }">
                                         <div class="tw-flex tw-gap-1 tw-flex-wrap">
-                                            <!-- Generar QR -->
-                                            <v-tooltip text="Generar QR">
-                                                <template #activator="{ props }">
-                                                    <v-btn
-                                                        v-bind="props"
-                                                        icon="mdi-qrcode"
-                                                        size="small"
-                                                        color="primary"
-                                                        variant="elevated"
-                                                        @click="generarQr(item)"
-                                                    ></v-btn>
-                                                </template>
-                                            </v-tooltip>
-
                                             <!-- Abrir QR -->
                                             <v-tooltip text="Abrir Página QR">
                                                 <template #activator="{ props }">
