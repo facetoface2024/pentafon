@@ -254,6 +254,12 @@ class SistemaQrController extends Controller
         try {
             $cliente = Cliente::findOrFail($request->cliente_id);
 
+            // Crear directorio si no existe
+            $directorioQr = dirname($request->qr_path);
+            if (!Storage::disk('public')->exists($directorioQr)) {
+                Storage::disk('public')->makeDirectory($directorioQr);
+            }
+
             // Guardar el SVG en storage
             Storage::disk('public')->put($request->qr_path, $request->svg_content);
 
@@ -330,11 +336,13 @@ class SistemaQrController extends Controller
         return response()->json([
             'success' => true,
             'clientes' => $clientes->map(function ($cliente) {
+                $tieneArchivoFisico = $cliente->qr_path && Storage::disk('public')->exists($cliente->qr_path);
                 return [
                     'id' => $cliente->id,
                     'correo' => $cliente->correo,
                     'qr_url' => $cliente->qr_url,
-                    'qr_path' => $cliente->qr_path
+                    'qr_path' => $cliente->qr_path,
+                    'tiene_archivo_fisico' => $tieneArchivoFisico
                 ];
             })
         ]);

@@ -75,6 +75,8 @@ const exportarClientes = () => {
 
 const generarQrClientesNuevos = async () => {
     try {
+        console.log('🔄 Iniciando generación automática de QR...');
+
         // Obtener lista de clientes que necesitan QR
         const response = await fetch('/generar-todos-qr', {
             headers: {
@@ -90,17 +92,24 @@ const generarQrClientesNuevos = async () => {
             return;
         }
 
+        console.log(`📋 Total de clientes activos: ${data.clientes.length}`);
+
         // Filtrar clientes sin QR físico guardado
-        const clientesSinQr = data.clientes.filter((cliente: any) => !cliente.qr_path || cliente.qr_path === null);
+        const clientesSinQr = data.clientes.filter((cliente: any) => !cliente.tiene_archivo_fisico);
+
+        console.log(`🔍 Clientes sin archivo QR físico: ${clientesSinQr.length}`);
 
         if (clientesSinQr.length > 0) {
             mostrarSnackbar(`🔄 Generando ${clientesSinQr.length} códigos QR con calidad profesional...`, 'info');
 
             let exitosos = 0;
+            let errores = 0;
 
             // Generar QR para cada cliente usando la librería QRCode.js
             for (const cliente of clientesSinQr) {
                 try {
+                    console.log(`⚡ Generando QR para: ${cliente.correo}`);
+
                     // Preparar el QR en el backend
                     const qrResponse = await fetch(`/generar-qr/${cliente.id}`, {
                         method: 'POST',
@@ -128,16 +137,30 @@ const generarQrClientesNuevos = async () => {
                         // Guardar el SVG en el storage
                         await guardarQrEnStorage(cliente.id, qrSvg, qrData.cliente.qr_path);
                         exitosos++;
+                        console.log(`✅ QR guardado para: ${cliente.correo}`);
+                    } else {
+                        console.error(`❌ Error en respuesta QR para ${cliente.correo}:`, qrData.message);
+                        errores++;
                     }
                 } catch (error) {
-                    console.error(`Error generando QR para ${cliente.correo}:`, error);
+                    console.error(`❌ Excepción generando QR para ${cliente.correo}:`, error);
+                    errores++;
                 }
             }
 
-            mostrarSnackbar(`✅ ${exitosos} códigos QR generados correctamente`, 'success');
+            if (exitosos > 0) {
+                mostrarSnackbar(`✅ ${exitosos} códigos QR generados correctamente`, 'success');
+            }
+            if (errores > 0) {
+                mostrarSnackbar(`⚠️ ${errores} errores al generar QR`, 'warning');
+            }
+        } else {
+            console.log('✅ Todos los clientes ya tienen sus QR generados');
+            mostrarSnackbar('✅ Todos los códigos QR ya están generados', 'success');
         }
 
         // Recargar la página para mostrar los cambios
+        console.log('🔄 Recargando página...');
         router.reload();
 
     } catch (error) {
@@ -227,7 +250,7 @@ const subirArchivo = async () => {
                 // Esperar un poco y luego generar QR para todos los clientes nuevos
                 setTimeout(async () => {
                     await generarQrClientesNuevos();
-                }, 1500);
+                }, 2000); // Aumenté el tiempo de espera
             } else {
                 router.reload();
             }
