@@ -122,9 +122,8 @@ const generarQrClientesNuevos = async () => {
                     const qrData = await qrResponse.json();
 
                     if (qrData.success) {
-                        // Generar QR SVG de alta calidad en el frontend
-                        const qrSvg = await QRCode.toString(qrData.qr_url, {
-                            type: 'svg',
+                                                // Generar QR PNG de alta calidad en el frontend
+                        const qrDataUrl = await QRCode.toDataURL(qrData.qr_url, {
                             width: 400,
                             margin: 2,
                             color: {
@@ -134,8 +133,19 @@ const generarQrClientesNuevos = async () => {
                             errorCorrectionLevel: 'M'
                         });
 
-                        // Guardar el SVG en el storage
-                        await guardarQrEnStorage(cliente.id, qrSvg, qrData.cliente.qr_path);
+                        // Convertir DataURL a contenido binario para PNG
+                        console.log('🔍 DataURL generado:', qrDataUrl.substring(0, 100) + '...');
+                        const base64Data = qrDataUrl.split(',')[1];
+
+                        // Verificar que el base64 es válido
+                        if (!base64Data) {
+                            throw new Error('Error al extraer datos base64 del QR');
+                        }
+
+                        console.log('📦 Base64 extraído, tamaño:', base64Data.length);
+
+                        // Guardar el PNG en el storage
+                        await guardarQrEnStorage(cliente.id, base64Data, qrData.cliente.qr_path);
                         exitosos++;
                         console.log(`✅ QR guardado para: ${cliente.correo}`);
                     } else {
@@ -282,19 +292,30 @@ const generarQr = async (cliente: Cliente) => {
         const data = await response.json();
 
         if (data.success) {
-            // 2. Generar QR SVG en el frontend
-            const qrSvg = await QRCode.toString(data.qr_url, {
-                type: 'svg',
-                width: 300,
+            // 2. Generar QR PNG en el frontend
+            const qrDataUrl = await QRCode.toDataURL(data.qr_url, {
+                width: 400,
                 margin: 2,
                 color: {
                     dark: '#000000',
                     light: '#FFFFFF'
-                }
+                },
+                errorCorrectionLevel: 'M'
             });
 
-            // 3. Guardar el SVG en el storage mediante backend
-            await guardarQrEnStorage(cliente.id, qrSvg, data.cliente.qr_path);
+                        // Convertir DataURL a contenido binario para PNG
+            console.log('🔍 DataURL generado (individual):', qrDataUrl.substring(0, 100) + '...');
+            const base64Data = qrDataUrl.split(',')[1];
+
+            // Verificar que el base64 es válido
+            if (!base64Data) {
+                throw new Error('Error al extraer datos base64 del QR');
+            }
+
+            console.log('📦 Base64 extraído (individual), tamaño:', base64Data.length);
+
+            // 3. Guardar el PNG en el storage mediante backend
+            await guardarQrEnStorage(cliente.id, base64Data, data.cliente.qr_path);
 
             mostrarSnackbar('✅ QR generado exitosamente', 'success');
             router.reload();
@@ -309,7 +330,7 @@ const generarQr = async (cliente: Cliente) => {
     }
 };
 
-const guardarQrEnStorage = async (clienteId: number, svgContent: string, qrPath: string) => {
+const guardarQrEnStorage = async (clienteId: number, qrContent: string, qrPath: string) => {
     try {
         const response = await fetch('/guardar-qr', {
             method: 'POST',
@@ -319,7 +340,7 @@ const guardarQrEnStorage = async (clienteId: number, svgContent: string, qrPath:
             },
             body: JSON.stringify({
                 cliente_id: clienteId,
-                svg_content: svgContent,
+                qr_content: qrContent,
                 qr_path: qrPath
             })
         });
@@ -416,7 +437,7 @@ const descargarQr = async (cliente: Cliente) => {
         const a = document.createElement('a');
         a.href = url;
         // Usar el correo como nombre del archivo
-        const extension = cliente.qr_path.split('.').pop() || 'svg';
+        const extension = cliente.qr_path.split('.').pop() || 'png';
         a.download = `${cliente.correo}.${extension}`;
         document.body.appendChild(a);
         a.click();
@@ -430,23 +451,30 @@ const descargarQr = async (cliente: Cliente) => {
 
 const generarYDescargarQr = async (cliente: Cliente) => {
     try {
-        // Generar QR SVG directamente
-        const qrSvg = await QRCode.toString(cliente.qr_url, {
-            type: 'svg',
-            width: 300,
+        // Generar QR PNG directamente
+        const qrDataUrl = await QRCode.toDataURL(cliente.qr_url, {
+            width: 400,
             margin: 2,
             color: {
                 dark: '#000000',
                 light: '#FFFFFF'
-            }
+            },
+            errorCorrectionLevel: 'M'
         });
 
-        // Descargar directamente
-        const blob = new Blob([qrSvg], { type: 'image/svg+xml' });
+        // Convertir DataURL a Blob para PNG
+        const base64Data = qrDataUrl.split(',')[1];
+        const binaryData = atob(base64Data);
+        const bytes = new Uint8Array(binaryData.length);
+        for (let i = 0; i < binaryData.length; i++) {
+            bytes[i] = binaryData.charCodeAt(i);
+        }
+
+        const blob = new Blob([bytes], { type: 'image/png' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `${cliente.correo}.svg`;
+        a.download = `${cliente.correo}.png`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);

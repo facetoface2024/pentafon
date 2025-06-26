@@ -126,7 +126,7 @@ class SistemaQrController extends Controller
 
                     // Preparar ruta para QR (se generará en el frontend)
                     $correoLimpio = str_replace(['@', '.', ' '], ['_', '_', '_'], $cliente->correo);
-                    $qrPath = 'qr_codes/' . $correoLimpio . '.svg';
+                    $qrPath = 'qr_codes/' . $correoLimpio . '.png';
                     $cliente->update(['qr_path' => $qrPath]);
 
                     $clientesCreados++;
@@ -159,7 +159,7 @@ class SistemaQrController extends Controller
             // Solo marcamos que el QR está listo
             // El QR se generará en el frontend usando JavaScript
             $correoLimpio = str_replace(['@', '.', ' '], ['_', '_', '_'], $cliente->correo);
-            $qrPath = 'qr_codes/' . $correoLimpio . '.svg';
+            $qrPath = 'qr_codes/' . $correoLimpio . '.png';
 
             // Actualizar cliente con la ruta donde se guardará el QR
             $cliente->update([
@@ -247,7 +247,7 @@ class SistemaQrController extends Controller
     {
         $request->validate([
             'cliente_id' => 'required|exists:clientes,id',
-            'svg_content' => 'required|string',
+            'qr_content' => 'required|string',
             'qr_path' => 'required|string'
         ]);
 
@@ -260,8 +260,24 @@ class SistemaQrController extends Controller
                 Storage::disk('public')->makeDirectory($directorioQr);
             }
 
-            // Guardar el SVG en storage
-            Storage::disk('public')->put($request->qr_path, $request->svg_content);
+                        // Limpiar el base64 (remover espacios y caracteres no válidos)
+            $cleanBase64 = preg_replace('/[^A-Za-z0-9+\/=]/', '', $request->qr_content);
+
+            // Guardar el PNG en storage (decodificar base64)
+            $pngData = base64_decode($cleanBase64);
+
+            // Verificar que la decodificación fue exitosa
+            if ($pngData === false || strlen($pngData) < 100) {
+                Log::error('Error decodificando base64 QR', [
+                    'cliente_id' => $request->cliente_id,
+                    'qr_path' => $request->qr_path,
+                    'base64_length' => strlen($request->qr_content),
+                    'decoded_length' => $pngData ? strlen($pngData) : 0
+                ]);
+                throw new \Exception('Error al decodificar el contenido base64 del QR');
+            }
+
+            Storage::disk('public')->put($request->qr_path, $pngData);
 
             // Verificar que el archivo se guardó correctamente
             if (!Storage::disk('public')->exists($request->qr_path)) {
@@ -380,8 +396,8 @@ class SistemaQrController extends Controller
                     // Usar el QR existente
                     $qrContent = Storage::disk('public')->get($cliente->qr_path);
 
-                    // Nombre del archivo usando el correo
-                    $nombreArchivo = $cliente->correo . '.svg';
+                                    // Nombre del archivo usando el correo
+                $nombreArchivo = $cliente->correo . '.png';
 
                     // Agregar al ZIP
                     $zip->addFromString($nombreArchivo, $qrContent);
