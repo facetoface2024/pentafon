@@ -73,85 +73,6 @@ const exportarClientes = () => {
     window.open('/exportar-clientes', '_blank');
 };
 
-const generarQrTodosClientes = async () => {
-    try {
-        // Obtener lista de clientes activos que necesitan QR
-        const response = await fetch('/generar-todos-qr', {
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-            },
-        });
-
-        const data = await response.json();
-
-        if (!data.success) {
-            mostrarSnackbar(`❌ ${data.message}`, 'error');
-            router.reload();
-            return;
-        }
-
-        // Generar QR para cada cliente que no lo tenga
-        const clientesSinQr = data.clientes.filter((cliente: any) => !cliente.qr_path);
-
-        if (clientesSinQr.length > 0) {
-            let exitosos = 0;
-            let errores = 0;
-
-            // Generar QR para cada cliente
-            for (const cliente of clientesSinQr) {
-                try {
-                    // Preparar el QR en el backend
-                    const qrResponse = await fetch(`/generar-qr/${cliente.id}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                        },
-                    });
-
-                    const qrData = await qrResponse.json();
-
-                    if (qrData.success) {
-                        // Generar QR SVG en el frontend
-                        const qrSvg = await QRCode.toString(qrData.qr_url, {
-                            type: 'svg',
-                            width: 300,
-                            margin: 2,
-                            color: {
-                                dark: '#000000',
-                                light: '#FFFFFF'
-                            }
-                        });
-
-                        // Guardar el SVG en el storage
-                        await guardarQrEnStorage(cliente.id, qrSvg, qrData.cliente.qr_path);
-                        exitosos++;
-                    } else {
-                        errores++;
-                    }
-                } catch (error) {
-                    console.error(`Error generando QR para ${cliente.correo}:`, error);
-                    errores++;
-                }
-            }
-
-            if (exitosos > 0) {
-                mostrarSnackbar(`✅ ${exitosos} códigos QR generados automáticamente`, 'success');
-            }
-            if (errores > 0) {
-                mostrarSnackbar(`⚠️ ${errores} errores al generar QR`, 'warning');
-            }
-        }
-
-        // Recargar la página para mostrar los cambios
-        router.reload();
-
-    } catch (error) {
-        mostrarSnackbar('❌ Error al generar QR automáticamente', 'error');
-        console.error('Error:', error);
-        router.reload();
-    }
-};
 
 const descargarTodosQr = async () => {
     loading.value = true;
@@ -221,22 +142,12 @@ const subirArchivo = async () => {
 
         const data = await response.json();
 
-        if (data.success) {
+                if (data.success) {
             mostrarSnackbar(`✅ ${data.message}`, 'success');
             if (data.errores && data.errores.length > 0) {
                 console.warn('Errores encontrados:', data.errores);
             }
-
-            // Si se indica que se deben generar QR en el frontend
-            if (data.generar_qr_frontend && data.clientes_creados > 0) {
-                mostrarSnackbar(`🔄 Generando ${data.clientes_creados} códigos QR automáticamente...`, 'info');
-                // Esperar un poco y luego generar QR para todos los clientes nuevos
-                setTimeout(async () => {
-                    await generarQrTodosClientes();
-                }, 1000);
-            } else {
-                router.reload();
-            }
+            router.reload();
         } else {
             mostrarSnackbar(`❌ ${data.message}`, 'error');
         }
