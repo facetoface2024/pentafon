@@ -29,14 +29,25 @@ const isLoading = ref(true);
 const typewriterText = ref('');
 const showImage = ref(false);
 
+// Construir nombre completo filtrando valores null/vacíos
+const nombreCompleto = computed(() => {
+    const partes = [
+        props.cliente.nombre,
+        props.cliente.apellido_paterno,
+        props.cliente.apellido_materno
+    ].filter(parte => parte && parte !== null && parte !== 'null' && parte.trim() !== '');
+
+    return partes.join(' ');
+});
+
 // Mensaje personalizado con nombre completo
-const welcomeMessage = `¡Hola ${props.cliente.nombre} ${props.cliente.apellido_paterno} ${props.cliente.apellido_materno}!
+const welcomeMessage = computed(() => `¡Hola ${nombreCompleto.value}!
 
 Bienvenido a Innovation Day 2025 🎉
 
 Gracias por estar aquí. El futuro te espera con todas las innovaciones que descubrirás hoy.
 
-¡Prepárate para una experiencia única! ✨`;
+¡Prepárate para una experiencia única! ✨`);
 
 const handleLoaded = () => {
     isLoading.value = false;
@@ -44,8 +55,8 @@ const handleLoaded = () => {
 
 // Configuración SEO personalizada
 const seoConfig = computed(() => ({
-    title: `¡Hola ${props.cliente.nombre} ${props.cliente.apellido_paterno} ${props.cliente.apellido_materno}! - Innovation Day 2025`,
-    description: `Saludo personalizado para ${props.cliente.nombre_completo} en Innovation Day 2025`,
+    title: `¡Hola ${nombreCompleto.value}! - Innovation Day 2025`,
+    description: `Saludo personalizado para ${nombreCompleto.value} en Innovation Day 2025`,
     ogImage: `${baseUrl.value}/images/banner.webp`,
     favicon: `${baseUrl.value}/images/favicon.png`
 }));
@@ -54,10 +65,11 @@ const seoConfig = computed(() => ({
 const startTypewriter = () => {
     let index = 0;
     const speed = 50; // Velocidad de escritura en ms
+    const message = welcomeMessage.value; // Obtener el valor del computed
 
     const typeNextChar = () => {
-        if (index < welcomeMessage.length) {
-            typewriterText.value += welcomeMessage.charAt(index);
+        if (index < message.length) {
+            typewriterText.value += message.charAt(index);
             index++;
             setTimeout(typeNextChar, speed);
         }
