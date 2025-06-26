@@ -94,11 +94,16 @@ const descargarTodosQr = async () => {
         const clientesSinQr = data.clientes.filter((cliente: any) => !cliente.qr_path);
 
         if (clientesSinQr.length > 0) {
-            mostrarSnackbar(`🔄 Generando ${clientesSinQr.length} códigos QR...`, 'info');
+            mostrarSnackbar(`🔄 Generando ${clientesSinQr.length} códigos QR automáticamente...`, 'info');
+
+            let exitosos = 0;
+            let errores = 0;
 
             // Generar QR para cada cliente
             for (const cliente of clientesSinQr) {
                 try {
+                    console.log(`Generando QR para: ${cliente.correo}`);
+
                     // Preparar el QR en el backend
                     const qrResponse = await fetch(`/generar-qr/${cliente.id}`, {
                         method: 'POST',
@@ -124,17 +129,54 @@ const descargarTodosQr = async () => {
 
                         // Guardar el SVG en el storage
                         await guardarQrEnStorage(cliente.id, qrSvg, qrData.cliente.qr_path);
+                        exitosos++;
+                        console.log(`✅ QR generado para: ${cliente.correo}`);
+                    } else {
+                        console.error(`❌ Error QR para ${cliente.correo}:`, qrData.message);
+                        errores++;
                     }
                 } catch (error) {
-                    console.error(`Error generando QR para ${cliente.correo}:`, error);
+                    console.error(`❌ Excepción generando QR para ${cliente.correo}:`, error);
+                    errores++;
                 }
             }
 
-            mostrarSnackbar('✅ Códigos QR generados exitosamente', 'success');
+            if (exitosos > 0) {
+                mostrarSnackbar(`✅ ${exitosos} códigos QR generados exitosamente`, 'success');
+            }
+            if (errores > 0) {
+                mostrarSnackbar(`⚠️ ${errores} errores al generar QR`, 'warning');
+            }
         }
 
-        // 3. Descargar el ZIP
-        window.open('/descargar-todos-qr', '_blank');
+        // 3. Pequeña pausa para asegurar que todo se guarde
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // 4. Descargar el ZIP
+        console.log('Iniciando descarga del ZIP...');
+        const downloadResponse = await fetch('/descargar-todos-qr');
+
+        if (!downloadResponse.ok) {
+            const errorData = await downloadResponse.json();
+            mostrarSnackbar(`❌ ${errorData.message}`, 'error');
+            if (errorData.clientes_sin_qr) {
+                console.log('Clientes sin QR aún:', errorData.clientes_sin_qr);
+            }
+            return;
+        }
+
+        // Crear descarga del blob
+        const blob = await downloadResponse.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `codigos_qr_${new Date().toISOString().slice(0,10)}.zip`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        mostrarSnackbar('✅ ZIP descargado exitosamente', 'success');
 
     } catch (error) {
         mostrarSnackbar('❌ Error al preparar descarga masiva', 'error');

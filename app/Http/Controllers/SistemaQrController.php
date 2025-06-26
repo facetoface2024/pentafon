@@ -9,6 +9,7 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use ZipArchive;
@@ -249,10 +250,16 @@ class SistemaQrController extends Controller
             // Guardar el SVG en storage
             Storage::disk('public')->put($request->qr_path, $request->svg_content);
 
+            // Verificar que el archivo se guardó correctamente
+            if (!Storage::disk('public')->exists($request->qr_path)) {
+                throw new \Exception('El archivo QR no se pudo guardar correctamente');
+            }
+
             return response()->json([
                 'success' => true,
                 'message' => 'QR guardado exitosamente',
-                'qr_path' => Storage::url($request->qr_path)
+                'qr_path' => Storage::url($request->qr_path),
+                'file_exists' => Storage::disk('public')->exists($request->qr_path)
             ]);
 
         } catch (\Exception $e) {
@@ -370,12 +377,17 @@ class SistemaQrController extends Controller
 
             $zip->close();
 
+            // Registro de información para debugging
             if (count($clientesSinQr) > 0) {
+                Log::info('Clientes sin QR encontrados:', $clientesSinQr);
+
                 // Si hay clientes sin QR, devolver error informativo
                 return response()->json([
                     'success' => false,
-                    'message' => 'Algunos clientes no tienen QR generado. Por favor, genera los QR primero.',
-                    'clientes_sin_qr' => $clientesSinQr
+                    'message' => 'Algunos clientes no tienen QR generado. Esto puede suceder si los QR no se guardaron correctamente.',
+                    'clientes_sin_qr' => $clientesSinQr,
+                    'total_clientes' => $clientes->count(),
+                    'clientes_con_qr' => $clientes->count() - count($clientesSinQr)
                 ], 400);
             }
 
