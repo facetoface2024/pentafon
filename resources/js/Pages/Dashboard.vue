@@ -73,6 +73,80 @@ const exportarClientes = () => {
     window.open('/exportar-clientes', '_blank');
 };
 
+const generarQrClientesNuevos = async () => {
+    try {
+        // Obtener lista de clientes que necesitan QR
+        const response = await fetch('/generar-todos-qr', {
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+            },
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+            mostrarSnackbar(`❌ Error al obtener clientes`, 'error');
+            router.reload();
+            return;
+        }
+
+        // Filtrar clientes sin QR físico guardado
+        const clientesSinQr = data.clientes.filter((cliente: any) => !cliente.qr_path || cliente.qr_path === null);
+
+        if (clientesSinQr.length > 0) {
+            mostrarSnackbar(`🔄 Generando ${clientesSinQr.length} códigos QR con calidad profesional...`, 'info');
+
+            let exitosos = 0;
+
+            // Generar QR para cada cliente usando la librería QRCode.js
+            for (const cliente of clientesSinQr) {
+                try {
+                    // Preparar el QR en el backend
+                    const qrResponse = await fetch(`/generar-qr/${cliente.id}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                        },
+                    });
+
+                    const qrData = await qrResponse.json();
+
+                    if (qrData.success) {
+                        // Generar QR SVG de alta calidad en el frontend
+                        const qrSvg = await QRCode.toString(qrData.qr_url, {
+                            type: 'svg',
+                            width: 400,
+                            margin: 2,
+                            color: {
+                                dark: '#000000',
+                                light: '#FFFFFF'
+                            },
+                            errorCorrectionLevel: 'M'
+                        });
+
+                        // Guardar el SVG en el storage
+                        await guardarQrEnStorage(cliente.id, qrSvg, qrData.cliente.qr_path);
+                        exitosos++;
+                    }
+                } catch (error) {
+                    console.error(`Error generando QR para ${cliente.correo}:`, error);
+                }
+            }
+
+            mostrarSnackbar(`✅ ${exitosos} códigos QR generados correctamente`, 'success');
+        }
+
+        // Recargar la página para mostrar los cambios
+        router.reload();
+
+    } catch (error) {
+        mostrarSnackbar('❌ Error al generar códigos QR', 'error');
+        console.error('Error:', error);
+        router.reload();
+    }
+};
+
 
 const descargarTodosQr = async () => {
     loading.value = true;
@@ -147,7 +221,16 @@ const subirArchivo = async () => {
             if (data.errores && data.errores.length > 0) {
                 console.warn('Errores encontrados:', data.errores);
             }
-            router.reload();
+
+            // Si se debe generar QR automáticamente
+            if (data.generar_qr_automatico && data.clientes_creados > 0) {
+                // Esperar un poco y luego generar QR para todos los clientes nuevos
+                setTimeout(async () => {
+                    await generarQrClientesNuevos();
+                }, 1500);
+            } else {
+                router.reload();
+            }
         } else {
             mostrarSnackbar(`❌ ${data.message}`, 'error');
         }
