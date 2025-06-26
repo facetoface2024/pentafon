@@ -55,7 +55,7 @@ const headers = [
     { title: 'Correo', key: 'correo', sortable: true },
     { title: 'QR Estado', key: 'qr_activo', width: '120px' },
     { title: 'Fecha Creación', key: 'created_at', width: '150px' },
-    { title: 'Acciones', key: 'actions', sortable: false, width: '200px' }
+    { title: 'Acciones', key: 'actions', sortable: false, width: '250px' }
 ];
 
 // Methods
