@@ -19,6 +19,7 @@ interface Cliente {
     qr_activo: boolean;
     qr_url: string;
     created_at: string;
+    created_at_timestamp?: number;
 }
 
 interface Props {
@@ -37,6 +38,8 @@ const loading = ref(false);
 const clienteAEliminar = ref<Cliente | null>(null);
 const clientesConQr = ref<Cliente[]>([]);
 const clientesSeleccionados = ref<number[]>([]);
+const busquedaQr = ref('');
+const ordenQr = ref('recientes');
 const archivoExcel = ref<File | null>(null);
 const search = ref('');
 const snackbar = ref(false);
@@ -267,12 +270,51 @@ const descargarQrSeleccionados = async () => {
 };
 
 const seleccionarTodos = () => {
-    clientesSeleccionados.value = clientesConQr.value.map(c => c.id);
+    clientesSeleccionados.value = clientesFiltrados.value.map(c => c.id);
 };
 
 const deseleccionarTodos = () => {
     clientesSeleccionados.value = [];
 };
+
+const limpiarFiltros = () => {
+    busquedaQr.value = '';
+    ordenQr.value = 'recientes';
+};
+
+// Computed para filtrar y ordenar clientes
+const clientesFiltrados = computed(() => {
+    let clientesFiltrados = [...clientesConQr.value];
+
+    // Filtrar por búsqueda
+    if (busquedaQr.value.trim()) {
+        const busqueda = busquedaQr.value.toLowerCase().trim();
+        clientesFiltrados = clientesFiltrados.filter(cliente =>
+            cliente.nombre_completo.toLowerCase().includes(busqueda) ||
+            cliente.correo.toLowerCase().includes(busqueda)
+        );
+    }
+
+    // Ordenar
+    clientesFiltrados.sort((a, b) => {
+        if (ordenQr.value === 'recientes') {
+            // Más recientes primero (usando timestamp)
+            return (b.created_at_timestamp || b.id) - (a.created_at_timestamp || a.id);
+        } else if (ordenQr.value === 'antiguos') {
+            // Más antiguos primero
+            return (a.created_at_timestamp || a.id) - (b.created_at_timestamp || b.id);
+        } else if (ordenQr.value === 'nombre') {
+            // Alfabético por nombre
+            return a.nombre_completo.localeCompare(b.nombre_completo);
+        } else if (ordenQr.value === 'correo') {
+            // Alfabético por correo
+            return a.correo.localeCompare(b.correo);
+        }
+        return 0;
+    });
+
+    return clientesFiltrados;
+});
 
 const abrirDialogoArchivo = () => {
     fileInput.value?.click();
@@ -920,21 +962,51 @@ onMounted(() => {
                     <v-icon class="tw-mr-2">mdi-checkbox-multiple-marked</v-icon>
                     Seleccionar Clientes para Descargar QR
                 </v-card-title>
-                <v-card-text class="tw-py-4">
+                                <v-card-text class="tw-py-4">
                     <div class="tw-mb-4">
                         <v-alert type="info" variant="outlined" class="tw-mb-4">
                             <strong>Selecciona los clientes</strong> de los que deseas descargar sus códigos QR.
                             Solo se muestran clientes que ya tienen QR procesado.
                         </v-alert>
 
-                        <div class="tw-flex tw-gap-2 tw-mb-4">
+                        <!-- Controles de búsqueda y filtro -->
+                        <v-row class="tw-mb-4">
+                            <v-col cols="12" md="8">
+                                <v-text-field
+                                    v-model="busquedaQr"
+                                    density="compact"
+                                    label="Buscar por nombre o correo..."
+                                    prepend-inner-icon="mdi-magnify"
+                                    variant="outlined"
+                                    hide-details
+                                    clearable
+                                ></v-text-field>
+                            </v-col>
+                            <v-col cols="12" md="4">
+                                <v-select
+                                    v-model="ordenQr"
+                                    :items="[
+                                        { title: 'Más Recientes', value: 'recientes' },
+                                        { title: 'Más Antiguos', value: 'antiguos' },
+                                        { title: 'Por Nombre A-Z', value: 'nombre' },
+                                        { title: 'Por Correo A-Z', value: 'correo' }
+                                    ]"
+                                    label="Ordenar por"
+                                    density="compact"
+                                    variant="outlined"
+                                    hide-details
+                                ></v-select>
+                            </v-col>
+                        </v-row>
+
+                        <div class="tw-flex tw-gap-2 tw-mb-4 tw-flex-wrap">
                             <v-btn
                                 color="primary"
                                 variant="outlined"
                                 size="small"
                                 @click="seleccionarTodos"
                             >
-                                Seleccionar Todos
+                                Seleccionar Todos Visibles
                             </v-btn>
                             <v-btn
                                 color="secondary"
@@ -944,13 +1016,22 @@ onMounted(() => {
                             >
                                 Deseleccionar Todos
                             </v-btn>
+                            <v-btn
+                                color="grey"
+                                variant="outlined"
+                                size="small"
+                                @click="limpiarFiltros"
+                                prepend-icon="mdi-filter-remove"
+                            >
+                                Limpiar Filtros
+                            </v-btn>
                         </div>
                     </div>
 
                     <div class="tw-max-h-96 tw-overflow-y-auto">
                         <v-list>
                             <v-list-item
-                                v-for="cliente in clientesConQr"
+                                v-for="cliente in clientesFiltrados"
                                 :key="cliente.id"
                                 class="tw-border-b tw-border-gray-200"
                             >
@@ -967,6 +1048,8 @@ onMounted(() => {
                                 </v-list-item-title>
                                 <v-list-item-subtitle>
                                     {{ cliente.correo }}
+                                    <br>
+                                    <small class="tw-text-gray-500">Creado: {{ cliente.created_at || 'N/A' }}</small>
                                 </v-list-item-subtitle>
 
                                 <template #append>
@@ -983,7 +1066,10 @@ onMounted(() => {
                     </div>
 
                     <div class="tw-mt-4 tw-text-sm tw-text-gray-600">
-                        <strong>{{ clientesSeleccionados.length }}</strong> de <strong>{{ clientesConQr.length }}</strong> clientes seleccionados
+                        <strong>{{ clientesSeleccionados.length }}</strong> de <strong>{{ clientesFiltrados.length }}</strong> clientes seleccionados
+                        <span v-if="clientesFiltrados.length !== clientesConQr.length" class="tw-ml-2 tw-text-blue-600">
+                            ({{ clientesFiltrados.length }} de {{ clientesConQr.length }} mostrados)
+                        </span>
                     </div>
                 </v-card-text>
                 <v-card-actions>

@@ -381,6 +381,8 @@ class SistemaQrController extends Controller
                     'nombre_completo' => $cliente->nombre_completo,
                     'correo' => $cliente->correo,
                     'qr_path' => $cliente->qr_path,
+                    'created_at' => $cliente->created_at->format('d/m/Y H:i'),
+                    'created_at_timestamp' => $cliente->created_at->timestamp,
                 ];
             })->values(),
             'clientes_sin_qr' => $clientesSinQr
