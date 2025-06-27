@@ -36,6 +36,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/exportar-clientes', [SistemaQrController::class, 'exportarClientes'])->name('clientes.exportar');
     Route::get('/generar-todos-qr', [SistemaQrController::class, 'generarTodosQr'])->name('clientes.generar-todos-qr');
     Route::get('/descargar-todos-qr', [SistemaQrController::class, 'descargarTodosQr'])->name('clientes.descargar-todos-qr');
+    Route::get('/clientes-con-qr', [SistemaQrController::class, 'clientesConQr'])->name('clientes.con-qr');
+    Route::post('/descargar-qr-seleccionados', [SistemaQrController::class, 'descargarQrSeleccionados'])->name('clientes.descargar-qr-seleccionados');
     Route::get('/scanner', [SistemaQrController::class, 'scanner'])->name('qr.scanner');
 });
 

@@ -32,8 +32,11 @@ const { mobile } = useDisplay();
 const dialog = ref(false);
 const dialogEliminar = ref(false);
 const dialogScanner = ref(false);
+const dialogSeleccionQr = ref(false);
 const loading = ref(false);
 const clienteAEliminar = ref<Cliente | null>(null);
+const clientesConQr = ref<Cliente[]>([]);
+const clientesSeleccionados = ref<number[]>([]);
 const archivoExcel = ref<File | null>(null);
 const search = ref('');
 const snackbar = ref(false);
@@ -181,35 +184,79 @@ const generarQrClientesNuevos = async () => {
 };
 
 
-const descargarTodosQr = async () => {
+const mostrarDialogoSeleccionQr = async () => {
     loading.value = true;
     try {
-        mostrarSnackbar('🔄 Preparando descarga de códigos QR...', 'info');
+        // Obtener lista de clientes con QR disponibles
+        const response = await fetch('/clientes-con-qr');
+        const data = await response.json();
 
-        // Descargar el ZIP directamente
-        const downloadResponse = await fetch('/descargar-todos-qr');
+        if (data.success) {
+            clientesConQr.value = data.clientes;
+            clientesSeleccionados.value = data.clientes.map((c: Cliente) => c.id); // Seleccionar todos por defecto
 
-        if (!downloadResponse.ok) {
-            const errorData = await downloadResponse.json();
-            mostrarSnackbar(`❌ ${errorData.message}`, 'error');
-            if (errorData.clientes_sin_qr && errorData.clientes_sin_qr.length > 0) {
-                mostrarSnackbar(`ℹ️ ${errorData.clientes_sin_qr.length} clientes sin QR. Esto puede ocurrir si son muy recientes.`, 'warning');
+            if (data.clientes_sin_qr > 0) {
+                mostrarSnackbar(`⚠️ ${data.clientes_sin_qr} clientes aún no tienen QR procesado. Probablemente fueron subidos recientemente.`, 'warning');
             }
+
+            if (data.clientes.length === 0) {
+                mostrarSnackbar('❌ No hay códigos QR disponibles para descargar', 'error');
+                return;
+            }
+
+            dialogSeleccionQr.value = true;
+        } else {
+            mostrarSnackbar(`❌ ${data.message}`, 'error');
+        }
+    } catch (error) {
+        mostrarSnackbar('❌ Error al obtener lista de clientes', 'error');
+        console.error('Error:', error);
+    } finally {
+        loading.value = false;
+    }
+};
+
+const descargarQrSeleccionados = async () => {
+    if (clientesSeleccionados.value.length === 0) {
+        mostrarSnackbar('❌ Debes seleccionar al menos un cliente', 'warning');
+        return;
+    }
+
+    loading.value = true;
+    try {
+        mostrarSnackbar('🔄 Preparando descarga de códigos QR seleccionados...', 'info');
+
+        // Descargar el ZIP con los clientes seleccionados
+        const response = await fetch('/descargar-qr-seleccionados', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+            },
+            body: JSON.stringify({
+                clientes_ids: clientesSeleccionados.value
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            mostrarSnackbar(`❌ ${errorData.message}`, 'error');
             return;
         }
 
         // Crear descarga del blob
-        const blob = await downloadResponse.blob();
+        const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `codigos_qr_${new Date().toISOString().slice(0,10)}.zip`;
+        a.download = `codigos_qr_seleccionados_${new Date().toISOString().slice(0,10)}.zip`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
 
         mostrarSnackbar('✅ ZIP descargado exitosamente', 'success');
+        dialogSeleccionQr.value = false;
 
     } catch (error) {
         mostrarSnackbar('❌ Error al descargar ZIP', 'error');
@@ -217,6 +264,14 @@ const descargarTodosQr = async () => {
     } finally {
         loading.value = false;
     }
+};
+
+const seleccionarTodos = () => {
+    clientesSeleccionados.value = clientesConQr.value.map(c => c.id);
+};
+
+const deseleccionarTodos = () => {
+    clientesSeleccionados.value = [];
 };
 
 const abrirDialogoArchivo = () => {
@@ -631,7 +686,7 @@ onMounted(() => {
                                                 color="teal"
                                                 variant="elevated"
                                                 prepend-icon="mdi-download-multiple"
-                                                @click="descargarTodosQr"
+                                                @click="mostrarDialogoSeleccionQr"
                                                 :loading="loading"
                                                 block
                                             >
@@ -853,6 +908,99 @@ onMounted(() => {
                         @click="detenerScanner"
                     >
                         Cerrar
+                    </v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
+
+        <!-- Dialog Selección de Clientes para QR -->
+        <v-dialog v-model="dialogSeleccionQr" max-width="800" persistent>
+            <v-card>
+                <v-card-title class="tw-bg-teal-50">
+                    <v-icon class="tw-mr-2">mdi-checkbox-multiple-marked</v-icon>
+                    Seleccionar Clientes para Descargar QR
+                </v-card-title>
+                <v-card-text class="tw-py-4">
+                    <div class="tw-mb-4">
+                        <v-alert type="info" variant="outlined" class="tw-mb-4">
+                            <strong>Selecciona los clientes</strong> de los que deseas descargar sus códigos QR.
+                            Solo se muestran clientes que ya tienen QR procesado.
+                        </v-alert>
+
+                        <div class="tw-flex tw-gap-2 tw-mb-4">
+                            <v-btn
+                                color="primary"
+                                variant="outlined"
+                                size="small"
+                                @click="seleccionarTodos"
+                            >
+                                Seleccionar Todos
+                            </v-btn>
+                            <v-btn
+                                color="secondary"
+                                variant="outlined"
+                                size="small"
+                                @click="deseleccionarTodos"
+                            >
+                                Deseleccionar Todos
+                            </v-btn>
+                        </div>
+                    </div>
+
+                    <div class="tw-max-h-96 tw-overflow-y-auto">
+                        <v-list>
+                            <v-list-item
+                                v-for="cliente in clientesConQr"
+                                :key="cliente.id"
+                                class="tw-border-b tw-border-gray-200"
+                            >
+                                <template #prepend>
+                                    <v-checkbox
+                                        v-model="clientesSeleccionados"
+                                        :value="cliente.id"
+                                        hide-details
+                                    ></v-checkbox>
+                                </template>
+
+                                <v-list-item-title>
+                                    {{ cliente.nombre_completo }}
+                                </v-list-item-title>
+                                <v-list-item-subtitle>
+                                    {{ cliente.correo }}
+                                </v-list-item-subtitle>
+
+                                <template #append>
+                                    <v-chip
+                                        color="success"
+                                        size="small"
+                                        variant="elevated"
+                                    >
+                                        QR Listo
+                                    </v-chip>
+                                </template>
+                            </v-list-item>
+                        </v-list>
+                    </div>
+
+                    <div class="tw-mt-4 tw-text-sm tw-text-gray-600">
+                        <strong>{{ clientesSeleccionados.length }}</strong> de <strong>{{ clientesConQr.length }}</strong> clientes seleccionados
+                    </div>
+                </v-card-text>
+                <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn
+                        @click="dialogSeleccionQr = false"
+                    >
+                        Cancelar
+                    </v-btn>
+                    <v-btn
+                        color="teal"
+                        variant="elevated"
+                        :loading="loading"
+                        :disabled="clientesSeleccionados.length === 0"
+                        @click="descargarQrSeleccionados"
+                    >
+                        Descargar ZIP ({{ clientesSeleccionados.length }})
                     </v-btn>
                 </v-card-actions>
             </v-card>

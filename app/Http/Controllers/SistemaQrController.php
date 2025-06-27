@@ -364,7 +364,104 @@ class SistemaQrController extends Controller
         ]);
     }
 
-        public function descargarTodosQr()
+    public function clientesConQr()
+    {
+        $clientesActivos = Cliente::where('qr_activo', true)->get();
+        $clientesConQr = $clientesActivos->filter(function ($cliente) {
+            return $cliente->qr_path && Storage::disk('public')->exists($cliente->qr_path);
+        });
+
+        $clientesSinQr = $clientesActivos->count() - $clientesConQr->count();
+
+        return response()->json([
+            'success' => true,
+            'clientes' => $clientesConQr->map(function ($cliente) {
+                return [
+                    'id' => $cliente->id,
+                    'nombre_completo' => $cliente->nombre_completo,
+                    'correo' => $cliente->correo,
+                    'qr_path' => $cliente->qr_path,
+                ];
+            })->values(),
+            'clientes_sin_qr' => $clientesSinQr
+        ]);
+    }
+
+    public function descargarQrSeleccionados(Request $request)
+    {
+        $request->validate([
+            'clientes_ids' => 'required|array|min:1',
+            'clientes_ids.*' => 'exists:clientes,id'
+        ]);
+
+        $clientes = Cliente::whereIn('id', $request->clientes_ids)
+                          ->where('qr_activo', true)
+                          ->get();
+
+        if ($clientes->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se encontraron clientes válidos'
+            ], 400);
+        }
+
+        try {
+            // Crear archivo ZIP temporal
+            $zipPath = tempnam(sys_get_temp_dir(), 'qr_codes_seleccionados') . '.zip';
+            $zip = new ZipArchive();
+
+            if ($zip->open($zipPath, ZipArchive::CREATE) !== TRUE) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se pudo crear el archivo ZIP'
+                ], 500);
+            }
+
+            $agregados = 0;
+            $clientesSinQr = [];
+
+            foreach ($clientes as $cliente) {
+                // Verificar si el cliente tiene QR guardado
+                if ($cliente->qr_path && Storage::disk('public')->exists($cliente->qr_path)) {
+                    // Usar el QR existente
+                    $qrContent = Storage::disk('public')->get($cliente->qr_path);
+
+                    // Nombre del archivo usando el correo
+                    $nombreArchivo = $cliente->correo . '.png';
+
+                    // Agregar al ZIP
+                    $zip->addFromString($nombreArchivo, $qrContent);
+                    $agregados++;
+                } else {
+                    // Agregar a la lista de clientes sin QR
+                    $clientesSinQr[] = $cliente->correo;
+                }
+            }
+
+            $zip->close();
+
+            // Si no se agregó ningún QR, devolver error
+            if ($agregados === 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Los clientes seleccionados no tienen códigos QR generados.',
+                    'clientes_sin_qr' => $clientesSinQr
+                ], 400);
+            }
+
+            $filename = 'codigos_qr_seleccionados_' . date('Y-m-d_H-i-s') . '.zip';
+
+            return response()->download($zipPath, $filename)->deleteFileAfterSend(true);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al generar ZIP: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function descargarTodosQr()
     {
         $clientes = Cliente::where('qr_activo', true)->get();
 
