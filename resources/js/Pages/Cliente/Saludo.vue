@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { Head, usePage } from '@inertiajs/vue3';
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, onUnmounted, watch, nextTick } from 'vue';
 import Preloader from '@/Components/Preloader.vue';
-import bannerImage from '../../../images/banner.webp';
 
 const page = usePage();
 const baseUrl = computed(() => {
@@ -27,9 +26,16 @@ const props = defineProps<Props>();
 
 const isLoading = ref(true);
 const typewriterText = ref('');
-const showImage = ref(false);
+const showContent = ref(false);
 
-// Construir nombre completo filtrando valores null/vacíos
+// Video related refs
+const currentVideo = ref<HTMLVideoElement | null>(null);
+const videoLoaded = ref(false);
+const selectedVideoPath = ref('');
+
+// Cache maps para precarga de videos
+
+// Construir nombre completo filtrando valores null/vacíos y capitalizando iniciales
 const nombreCompleto = computed(() => {
     const partes = [
         props.cliente.nombre,
@@ -37,17 +43,46 @@ const nombreCompleto = computed(() => {
         props.cliente.apellido_materno
     ].filter(parte => parte && parte !== null && parte !== 'null' && parte.trim() !== '');
 
-    return partes.join(' ');
+    // Capitalizar la primera letra de cada parte
+    const partesCapitalizadas = partes.map(parte => {
+        return parte.charAt(0).toUpperCase() + parte.slice(1).toLowerCase();
+    });
+
+    return partesCapitalizadas.join(' ');
 });
 
-// Mensaje personalizado con nombre completo
-const welcomeMessage = computed(() => `¡Hola ${nombreCompleto.value}!
+// Índice del mensaje seleccionado aleatoriamente
+const messageIndex = ref(0);
 
-Bienvenido a Innovation Day 2025 🎉
+// Mensaje personalizado con nombre completo - selección aleatoria
+const welcomeMessage = computed(() => {
+    // Array de mensajes de saludo
+    const welcomeMessages = [
+        `¡Hola <span class="nombre-bold">${nombreCompleto.value}</span>!
+Bienvenido a Innovation Day 2025.
+El futuro comienza hoy.`,
 
-Gracias por estar aquí. El futuro te espera con todas las innovaciones que descubrirás hoy.
+        `¡Bienvenido <span class="nombre-bold">${nombreCompleto.value}</span>!
+Gracias por ser parte del cambio.`,
 
-¡Prepárate para una experiencia única! ✨`);
+        `¡Hola <span class="nombre-bold">${nombreCompleto.value}</span>!
+Despierta tu mente, rompe los límites.
+Innovation Day 2025 te espera.`,
+
+        `¡Hola, <span class="nombre-bold">${nombreCompleto.value}</span>!
+Tu visión es parte de esta revolución.
+¡Bienvenido a Innovation Day 2025!`,
+
+        `¡<span class="nombre-bold">${nombreCompleto.value}</span>, llegaste justo a tiempo!
+Innovation Day 2025 está por despegar.
+¿Listo para transformar el mañana?`,
+
+        `¡<span class="nombre-bold">${nombreCompleto.value}</span>, Bienvenido al epicentro de la innovación!
+Hoy las ideas se convierten en acción.`
+    ];
+
+    return welcomeMessages[messageIndex.value];
+});
 
 const handleLoaded = () => {
     isLoading.value = false;
@@ -61,16 +96,114 @@ const seoConfig = computed(() => ({
     favicon: `${baseUrl.value}/images/favicon.png`
 }));
 
-// Efecto typewriter
+// Función para seleccionar video aleatorio (como los mensajes)
+const selectRandomVideo = (): string => {
+    const videoNumber = Math.floor(Math.random() * 3) + 1; // Números del 1 al 3
+    const videoPath = `/video/video_fondo_${videoNumber}.mp4`;
+    console.log(`🎲 Video seleccionado aleatoriamente: ${videoPath}`);
+    return videoPath;
+};
+
+// Función para precargar videos (simplificada)
+const preloadVideos = (): void => {
+    console.log('📹 Precargando videos...');
+
+    // Precargar solo los videos que podrían ser necesarios
+    for (let i = 1; i <= 3; i++) {
+        const videoPath = `/video/video_fondo_${i}.mp4`;
+
+        // Crear elemento link para precargar
+        const link = document.createElement('link');
+        link.rel = 'preload';
+        link.as = 'video';
+        link.href = videoPath;
+        link.type = 'video/mp4';
+        document.head.appendChild(link);
+    }
+
+    console.log('📹 Enlaces de precarga de videos creados');
+};
+
+// Función para reproducir video de fondo
+const playBackgroundVideo = async (): Promise<void> => {
+    try {
+        // Obtener el elemento video del DOM
+        const videoElement = document.querySelector('#background-video') as HTMLVideoElement;
+
+        if (!videoElement) {
+            console.error('❌ Elemento video no encontrado');
+            return;
+        }
+
+        console.log(`🎬 Configurando video: ${videoElement.src}`);
+
+        // Esperar a que se cargue el video si aún no está cargado
+        if (videoElement.readyState < 3) { // HAVE_FUTURE_DATA
+            await new Promise<void>((resolve, reject) => {
+                const onLoadedData = () => {
+                    console.log('✅ Video cargado correctamente');
+                    videoElement.removeEventListener('loadeddata', onLoadedData);
+                    videoElement.removeEventListener('error', onError);
+                    resolve();
+                };
+
+                const onError = (error: Event) => {
+                    console.error('❌ Error al cargar video:', error);
+                    videoElement.removeEventListener('loadeddata', onLoadedData);
+                    videoElement.removeEventListener('error', onError);
+                    reject(error);
+                };
+
+                videoElement.addEventListener('loadeddata', onLoadedData);
+                videoElement.addEventListener('error', onError);
+            });
+        }
+
+        // Intentar reproducir el video
+        try {
+            await videoElement.play();
+            currentVideo.value = videoElement;
+            videoLoaded.value = true;
+            console.log('✅ Video de fondo reproduciéndose');
+        } catch (playError) {
+            console.warn('⚠️ Video no pudo reproducirse automáticamente, esperando interacción del usuario');
+            // El video se reproducirá cuando el usuario interactúe
+            videoLoaded.value = true;
+        }
+    } catch (error) {
+        console.error('❌ Error al reproducir video de fondo:', error);
+        // Continuar sin video si hay error
+        videoLoaded.value = true;
+    }
+};
+
+// Funciones de audio eliminadas - solo se usa video y texto
+
+// Efecto typewriter modificado para HTML
 const startTypewriter = () => {
     let index = 0;
-    const speed = 50; // Velocidad de escritura en ms
-    const message = welcomeMessage.value; // Obtener el valor del computed
+    const speed = 50;
+    const message = welcomeMessage.value;
 
     const typeNextChar = () => {
         if (index < message.length) {
-            typewriterText.value += message.charAt(index);
-            index++;
+            // Si el caracter actual es '<', encontrar el final del tag
+            if (message.charAt(index) === '<') {
+                const endTag = message.indexOf('>', index);
+                if (endTag !== -1) {
+                    // Agregar todo el tag de una vez
+                    typewriterText.value += message.substring(index, endTag + 1);
+                    index = endTag + 1;
+                } else {
+                    // Si no hay cierre de tag, agregar el caracter normalmente
+                    typewriterText.value += message.charAt(index);
+                    index++;
+                }
+            } else {
+                // Agregar caracter normal
+                typewriterText.value += message.charAt(index);
+                index++;
+            }
             setTimeout(typeNextChar, speed);
         }
     };
@@ -78,17 +211,100 @@ const startTypewriter = () => {
     typeNextChar();
 };
 
-onMounted(() => {
-    // Ocultar el preloader después de 2 segundos y comenzar todo
-    setTimeout(() => {
+// Watcher para selectedVideoPath
+watch(selectedVideoPath, async (newPath) => {
+    if (newPath) {
+        console.log(`📺 selectedVideoPath cambió a: ${newPath}`);
+
+        // Esperar al siguiente tick para asegurar que el DOM esté actualizado
+        await nextTick();
+
+        const videoElement = document.querySelector('#background-video') as HTMLVideoElement;
+        if (videoElement) {
+            console.log(`🎬 Video element src: ${videoElement.src}`);
+            console.log(`🎬 Video element readyState: ${videoElement.readyState}`);
+
+            // Verificar si el src está configurado correctamente
+            if (!videoElement.src || videoElement.src === window.location.href) {
+                console.warn('⚠️ Video src no está configurado correctamente, configurando manualmente...');
+                videoElement.src = newPath;
+                videoElement.load();
+            }
+        }
+    }
+});
+
+// Funciones de auto-click eliminadas junto con audio
+
+onMounted(async () => {
+    console.log('🎬 Componente montado, iniciando secuencia...');
+
+    // Seleccionar mensaje aleatoriamente
+    messageIndex.value = Math.floor(Math.random() * 6);
+    console.log(`💬 Mensaje seleccionado aleatoriamente: ${messageIndex.value + 1}`);
+
+    // Seleccionar video aleatoriamente para establecer el src
+    selectedVideoPath.value = selectRandomVideo();
+    console.log(`🎬 Video seleccionado: ${selectedVideoPath.value}`);
+
+    // Precargar recursos
+    preloadVideos();
+
+    // Solo se precargan videos - audio eliminado
+
+    // Dar tiempo adicional para que el video se configure
+    setTimeout(async () => {
+        console.log('🎬 Iniciando reproducción de video...');
+        await playBackgroundVideo();
+
+        // Ocultar preloader y mostrar contenido
         isLoading.value = false;
-        // Mostrar la imagen inmediatamente al cargar
-        showImage.value = true;
-        // Esperar un poco más y comenzar el efecto typewriter
+        showContent.value = true;
+
+        // Iniciar typewriter
         setTimeout(() => {
             startTypewriter();
         }, 300);
+
+        // Ya no se configura audio automático
+
+        // Debug del video después de un delay
+        setTimeout(() => {
+            const videoElement = document.querySelector('#background-video') as HTMLVideoElement;
+            if (videoElement) {
+                console.log('🔍 DEBUG Video Status:');
+                console.log(`  - src: ${videoElement.src}`);
+                console.log(`  - readyState: ${videoElement.readyState}`);
+                console.log(`  - paused: ${videoElement.paused}`);
+                console.log(`  - currentTime: ${videoElement.currentTime}`);
+                console.log(`  - duration: ${videoElement.duration}`);
+                console.log(`  - error: ${videoElement.error}`);
+                                console.log(`  - networkState: ${videoElement.networkState}`);
+                console.log(`  - visibility: ${getComputedStyle(videoElement).visibility}`);
+                console.log(`  - display: ${getComputedStyle(videoElement).display}`);
+                console.log(`  - opacity: ${getComputedStyle(videoElement).opacity}`);
+                console.log(`  - z-index: ${getComputedStyle(videoElement).zIndex}`);
+
+                if (videoElement.paused && videoElement.readyState >= 2) {
+                    console.log('⚠️ Video está pausado pero listo, intentando reproducir...');
+                    videoElement.play().catch(error => {
+                        console.error('❌ Error al reproducir video en debug:', error);
+                    });
+                }
+            }
+        }, 1000);
     }, 2000);
+});
+
+onUnmounted(() => {
+    console.log('🧹 Limpiando recursos...');
+
+    if (currentVideo.value) {
+        currentVideo.value.pause();
+        currentVideo.value = null;
+    }
+
+    // Cache de audio eliminado
 });
 </script>
 
@@ -110,89 +326,84 @@ onMounted(() => {
         <Preloader :is-loading="isLoading" @loaded="handleLoaded" />
 
         <v-main>
-            <!-- Contenedor principal -->
-            <div class="welcome-container">
-                <!-- Header con logos -->
-                <header class="top-header">
-                    <div class="logo-left">
-                        <img
-                            :src="`${baseUrl}/images/logo.svg`"
-                            alt="Pentafon Logo"
-                            class="logo-image"
-                        />
-                    </div>
-                    <div class="logo-right">
-                        <img
-                            :src="`${baseUrl}/images/innovation.svg`"
-                            alt="Innovation Logo"
-                            class="innovation-image"
-                        />
-                    </div>
-                </header>
+            <!-- Header con logos -->
+            <header class="top-header">
+                <div class="logo-left">
+                    <img
+                        :src="`${baseUrl}/images/logo.svg`"
+                        alt="Pentafon Logo"
+                        class="logo-image"
+                    />
+                </div>
+                <div class="logo-right">
+                    <img
+                        :src="`${baseUrl}/images/innovation.svg`"
+                        alt="Innovation Logo"
+                        class="innovation-image"
+                    />
+                </div>
+            </header>
 
-                                <!-- Contenido principal responsive -->
-                <v-container fluid class="main-content pa-0">
-                    <v-row class="fill-height align-center ma-0" no-gutters>
-                                                <!-- Columna del mensaje - Arriba siempre -->
-                        <v-col
-                            cols="12"
-                            class="message-column pa-0"
-                            order="1"
-                        >
-                            <div class="message-container">
+            <!-- Contenedor principal que incluye video y contenido -->
+            <div class="welcome-container">
+                <!-- Video de fondo después del header -->
+                <div class="video-background">
+                    <video
+                        id="background-video"
+                        :src="selectedVideoPath"
+                        autoplay
+                        muted
+                        loop
+                        playsinline
+                        preload="auto"
+                        class="background-video"
+                        @loadeddata="videoLoaded = true"
+                        @error="console.error('Error loading video:', $event)"
+                    />
+                </div>
+
+                <!-- Botón oculto eliminado junto con audio -->
+
+                <!-- Contenido principal sobre el video -->
+                <div class="main-content">
+                    <transition name="fade-in">
+                        <div v-if="showContent" class="content-overlay">
+                            <!-- Card del mensaje posicionado específicamente -->
+                            <div class="message-card">
                                 <div class="typewriter-container">
-                                    <p class="typewriter-text">{{ typewriterText }}<span class="cursor">|</span></p>
+                                    <p class="typewriter-text" v-html="typewriterText + '<span class=&quot;cursor&quot;>|</span>'"></p>
                                 </div>
                             </div>
-                        </v-col>
-
-                        <!-- Columna de la imagen - Abajo siempre -->
-                        <v-col
-                            cols="12"
-                            class="image-column pa-0"
-                            order="2"
-                        >
-                            <div class="image-container">
-                                <transition name="fade-in">
-                                    <img
-                                        v-if="showImage"
-                                        :src="bannerImage"
-                                        alt="Innovation Day Banner"
-                                        class="banner-image"
-                                        loading="lazy"
-                                    />
-                                </transition>
-                            </div>
-                        </v-col>
-                    </v-row>
-                </v-container>
+                        </div>
+                    </transition>
+                </div>
             </div>
         </v-main>
     </v-app>
 </template>
 
 <style scoped>
-.welcome-container {
-    min-height: 100vh;
-    background-image: url('/images/fondo1.png');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-    position: relative;
+/* Estilos del botón de audio eliminados */
+
+/* Asegurar que todos los contenedores sean transparentes */
+:deep(body) {
+    background: transparent !important;
 }
 
-/* Overlay semitransparente */
-.welcome-container::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(255, 255, 255, 0.1);
-    z-index: 1;
-    pointer-events: none;
+:deep(html) {
+    background: transparent !important;
+}
+
+:deep(.v-application) {
+    background: transparent !important;
+}
+
+:deep(.v-main) {
+    background: transparent !important;
+}
+
+:deep(.v-application__wrap) {
+    background: transparent !important;
 }
 
 .top-header {
@@ -200,11 +411,11 @@ onMounted(() => {
     top: 0;
     left: 0;
     right: 0;
-    height: 100px;
+    height: 120px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0 2rem;
+    padding: 0 4rem;
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
     z-index: 1000;
@@ -217,7 +428,7 @@ onMounted(() => {
 }
 
 .logo-image {
-    height: 60px;
+    height: 80px;
     width: auto;
     transition: transform 0.3s ease;
 }
@@ -227,7 +438,7 @@ onMounted(() => {
 }
 
 .innovation-image {
-    height: 90px;
+    height: 100px;
     width: auto;
     transition: transform 0.3s ease;
 }
@@ -236,42 +447,103 @@ onMounted(() => {
     transform: scale(1.05);
 }
 
-.main-content {
-    padding-top: 120px;
+.welcome-container {
+    margin-top: 120px; /* Espacio para el header fijo */
     min-height: calc(100vh - 120px);
     position: relative;
-    z-index: 2;
+    background: transparent;
+    overflow: hidden;
 }
 
-.message-column {
+.video-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.background-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+    opacity: 1;
+}
+
+.main-content {
+    position: relative;
+    z-index: 2;
+    min-height: calc(100vh - 120px);
+    background: transparent;
+}
+
+.content-overlay {
+    position: relative;
+    width: 100%;
+    height: calc(100vh - 120px);
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 2rem;
+    background: transparent;
 }
 
-.message-container {
-    max-width: 90%;
-    width: 100%;
+/* Posicionamiento específico del card para totem */
+.message-card {
+    position: absolute;
+    /*
+    POSICIONAMIENTO PERSONALIZABLE:
+    - top: 0% = arriba del todo, 100% = abajo del todo
+    - left: 0% = izquierda del todo, 100% = derecha del todo
+    - También puedes usar: right, bottom en lugar de left, top
+
+    EJEMPLOS DE POSICIONAMIENTO:
+    - Esquina superior izquierda: top: 5%, left: 5%
+    - Esquina superior derecha: top: 5%, right: 5%
+    - Esquina inferior izquierda: bottom: 5%, left: 5%
+    - Esquina inferior derecha: bottom: 5%, right: 5%
+    - Centro: top: 50%, left: 50%, transform: translate(-50%, -50%)
+    */
+    top: 20%; /* Distancia desde arriba */
+    left: 5%; /* Distancia desde la izquierda */
+
+    /* Tamaño del card */
+    max-width: 900px;
+    width: 45%; /* Ancho relativo al contenedor */
+
+    /* Asegurar que esté encima del video */
+    z-index: 10;
+
+    /* Para debugging - descomenta para ver el borde del card */
+    /* border: 2px solid red; */
+    /* background: rgba(255, 0, 0, 0.1); */
 }
 
 .typewriter-container {
-    background: rgba(255, 255, 255, 0.95);
-    padding: 3rem;
-    border-radius: 20px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+
+    padding: 4rem;
+    border-radius: 25px;
 }
 
 .typewriter-text {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    font-size: 1.4rem;
-    line-height: 1.6;
+    font-size: 4.5rem;
+    line-height: 1.4;
     color: #1a1a1a;
     margin: 0;
     white-space: pre-line;
     word-wrap: break-word;
+    text-align: center;
+    font-weight: 500;
+}
+
+/* Estilo para nombres en negritas */
+.nombre-bold {
+    font-weight: 700;
+    font-size: 1.1em;
 }
 
 .cursor {
@@ -285,40 +557,14 @@ onMounted(() => {
     51%, 100% { opacity: 0; }
 }
 
-.image-column {
-    display: flex;
-    align-items: stretch;
-    justify-content: stretch;
-    padding: 0;
-}
-
-.image-container {
-    width: 100vw;
-    height: 100%;
-    display: flex;
-    align-items: stretch;
-    justify-content: stretch;
-    position: relative;
-    margin-left: calc(-50vw + 50%);
-    margin-right: calc(-50vw + 50%);
-}
-
-.banner-image {
-    width: 100%;
-    height: 100%;
-    min-height: calc(100vh - 140px);
-    object-fit: fill;
-    object-position: center;
-}
-
 /* Transiciones */
 .fade-in-enter-active {
-    transition: all 1.5s ease-out;
+    transition: all 2s ease-out;
 }
 
 .fade-in-enter-from {
     opacity: 0;
-    transform: translateY(30px) scale(0.95);
+    transform: translateY(50px) scale(0.9);
 }
 
 .fade-in-enter-to {
@@ -326,15 +572,150 @@ onMounted(() => {
     transform: translateY(0) scale(1);
 }
 
-/* Responsive - Mobile First (Vertical) */
-@media (max-width: 959px) {
-    .welcome-container {
-        background-attachment: scroll;
+/* Responsive para totem - Pantallas grandes */
+@media (min-width: 1400px) {
+    .top-header {
+        height: 140px;
+        padding: 0 5rem;
     }
 
+    .logo-image {
+        height: 100px;
+    }
+
+    .innovation-image {
+        height: 120px;
+    }
+
+    .welcome-container {
+        margin-top: 140px;
+        min-height: calc(100vh - 140px);
+    }
+
+    .main-content {
+        min-height: calc(100vh - 140px);
+    }
+
+    .content-overlay {
+        height: calc(100vh - 140px);
+    }
+
+    .message-card {
+        /* Ajustar posición para pantallas grandes */
+        top: 1%; /* Ajustar según necesidad */
+        left: 5%; /* Ajustar según necesidad */
+        max-width: 1200px;
+        width: 45%; /* Ajustar según necesidad */
+    }
+
+    .typewriter-container {
+        padding: 5rem;
+        border-radius: 30px;
+    }
+
+    .typewriter-text {
+        font-size: 3.2rem;
+        line-height: 1.5;
+    }
+}
+
+/* Pantallas extra grandes (40+ pulgadas) */
+@media (min-width: 1920px) {
+    .top-header {
+        height: 160px;
+        padding: 0 6rem;
+    }
+
+    .logo-image {
+        height: 120px;
+    }
+
+    .innovation-image {
+        height: 140px;
+    }
+
+    .welcome-container {
+        margin-top: 160px;
+        min-height: calc(100vh - 160px);
+    }
+
+    .main-content {
+        min-height: calc(100vh - 160px);
+    }
+
+    .content-overlay {
+        height: calc(100vh - 160px);
+    }
+
+    .message-card {
+        /* Ajustar posición para pantallas extra grandes */
+        top: 1%; /* Ajustar según necesidad */
+        left: 5%; /* Ajustar según necesidad */
+        max-width: 1400px;
+        width: 45%; /* Ajustar según necesidad */
+    }
+
+    .typewriter-container {
+        padding: 6rem;
+        border-radius: 35px;
+    }
+
+    .typewriter-text {
+        font-size: 3.2rem;
+        line-height: 1.4;
+    }
+}
+
+/* Responsive - Tablets */
+@media (max-width: 1399px) and (min-width: 768px) {
+    .top-header {
+        height: 100px;
+        padding: 0 3rem;
+    }
+
+    .logo-image {
+        height: 60px;
+    }
+
+    .innovation-image {
+        height: 80px;
+    }
+
+    .welcome-container {
+        margin-top: 100px;
+        min-height: calc(100vh - 100px);
+    }
+
+    .main-content {
+        min-height: calc(100vh - 100px);
+    }
+
+    .content-overlay {
+        height: calc(100vh - 100px);
+    }
+
+    .message-card {
+        /* Ajustar posición para tablets */
+        top: 1%; /* Ajustar según necesidad */
+        left: 1%; /* Ajustar según necesidad */
+        max-width: 800px;
+        width: 74%; /* Ajustar según necesidad */
+    }
+
+    .typewriter-container {
+        padding: 2.9rem;
+    }
+
+    .typewriter-text {
+        font-size: 2.75rem;
+    }
+}
+
+/* Responsive - Móviles */
+@media (max-width: 767px) {
     .top-header {
         height: 80px;
-        padding: 0 1.5rem;
+        padding: 0 2rem;
     }
 
     .logo-image {
@@ -342,150 +723,37 @@ onMounted(() => {
     }
 
     .innovation-image {
-        height: 40px;
+        height: 60px;
+    }
+
+    .welcome-container {
+        margin-top: 80px;
+        min-height: calc(100vh - 80px);
     }
 
     .main-content {
-        padding-top: 100px;
-        min-height: calc(100vh - 100px);
+        min-height: calc(100vh - 80px);
     }
 
-    .message-column {
-        padding: 1.5rem;
-        min-height: 50vh;
+    .content-overlay {
+        height: calc(100vh - 80px);
+    }
+
+    .message-card {
+        /* Ajustar posición para móviles */
+        top: 1%; /* Ajustar según necesidad */
+        left: 5%; /* Ajustar según necesidad */
+        max-width: 95%;
+        width: 90%; /* Ajustar según necesidad */
     }
 
     .typewriter-container {
         padding: 2rem;
-        margin-bottom: 1rem;
+        border-radius: 20px;
     }
 
     .typewriter-text {
-        font-size: 1.2rem;
-        text-align: center;
-    }
-
-    .image-column {
-        padding: 0;
-        min-height: 50vh;
-        margin: 0;
-    }
-
-    .image-container {
-        width: 100vw;
-        margin-left: calc(-50vw + 50%);
-        margin-right: calc(-50vw + 50%);
-    }
-
-    .banner-image {
-        min-height: 50vh;
-        width: 100%;
-        height: 100%;
-        object-fit: fill;
-    }
-}
-
-/* Móviles pequeños */
-@media (max-width: 480px) {
-    .top-header {
-        height: 70px;
-        padding: 0 1rem;
-    }
-
-    .logo-image {
-        height: 35px;
-    }
-
-    .innovation-image {
-        height: 30px;
-    }
-
-    .main-content {
-        padding-top: 90px;
-    }
-
-    .message-column {
-        padding: 1rem;
-    }
-
-    .image-column {
-        padding: 0;
-        margin: 0;
-    }
-
-    .image-container {
-        width: 100vw;
-        margin-left: calc(-50vw + 50%);
-        margin-right: calc(-50vw + 50%);
-    }
-
-    .typewriter-container {
-        padding: 1.5rem;
-        border-radius: 15px;
-    }
-
-    .typewriter-text {
-        font-size: 1.1rem;
-    }
-
-    .banner-image {
-        min-height: 45vh;
-        height: 100%;
-        object-fit: fill;
-    }
-}
-
-/* Desktop - Layout vertical igual que móvil pero con márgenes mínimos */
-@media (min-width: 960px) {
-    .main-content {
-        padding-top: 120px;
-    }
-
-    .message-column {
-        padding: 1rem 2rem; /* Márgenes mínimos en los lados */
-        min-height: 40vh;
-    }
-
-    .image-column {
-        padding: 0;
-        margin: 0;
-        min-height: 60vh;
-    }
-
-    .image-container {
-        width: 100vw;
-        margin-left: calc(-50vw + 50%);
-        margin-right: calc(-50vw + 50%);
-    }
-
-    .banner-image {
-        width: 100%;
-        height: 100%;
-        min-height: 60vh;
-        object-fit: fill;
-        object-position: center;
-    }
-
-    .typewriter-text {
-        font-size: 1.5rem;
-        text-align: center; /* Centrado igual que móvil */
-    }
-
-    .typewriter-container {
-        padding: 2.5rem;
-        max-width: 800px;
-        margin: 0 auto;
-    }
-}
-
-/* Pantallas muy grandes */
-@media (min-width: 1400px) {
-    .typewriter-container {
-        padding: 4rem;
-    }
-
-    .typewriter-text {
-        font-size: 1.6rem;
+        font-size: 1.4rem;
     }
 }
 </style>

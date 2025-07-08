@@ -252,3 +252,174 @@ Para soporte técnico o dudas sobre el sistema:
 Sistema desarrollado para **Innovation Day 2025 - Pentafon & Microsoft**
 
 © 2024 - Todos los derechos reservados 
+
+# 🎵 Sistema de Audio Automático para Totem - Innovation Day 2025
+
+## 📋 Descripción del Sistema
+
+El sistema de saludo personalizado ahora incluye un mecanismo de **click automático** para activar el audio sin requerir interacción del usuario, específicamente diseñado para totems de exposición.
+
+---
+
+## 🎯 **Cómo Funciona el Audio Automático**
+
+### 1. **Botón Oculto con Click Automático**
+- Se crea un botón completamente invisible en el DOM
+- Después de 2 segundos de cargar la página, se ejecuta automáticamente un `click()` en este botón
+- Este click simula la interacción necesaria para que el navegador permita la reproducción de audio
+
+### 2. **Secuencia de Activación**
+```
+Página carga → 2 segundos → Click automático → Audio se reproduce → Audios aleatorios continúan
+```
+
+### 3. **Archivos de Audio**
+- **Audio principal**: `audio_1.mp3` (se reproduce primero)
+- **Audios aleatorios**: `audio_2.mp3` a `audio_6.mp3` (se reproducen después)
+
+---
+
+## 🔧 **Configuración del Navegador**
+
+### **Para que funcione correctamente, usa:**
+
+```batch
+chrome.exe --autoplay-policy=no-user-gesture-required --disable-web-security --kiosk "http://localhost:8000/cliente/saludo"
+```
+
+### **O ejecuta el script automático:**
+```batch
+configurar_totem.bat
+```
+
+---
+
+## 🧪 **Verificación de Funcionamiento**
+
+### **Logs de Consola (F12):**
+```
+⏱️ Configurando click automático para totem en 2 segundos...
+🎯 Tiempo de click automático alcanzado
+✅ Botón automático encontrado, ejecutando click...
+🤖 Click automático ejecutado para activar audio del totem...
+🎵 Iniciando audio automático para totem...
+🎵 Reproduciendo audio: /audio/audio_1.mp3
+✅ Audio reproducido exitosamente: /audio/audio_1.mp3
+✅ Audio principal iniciado exitosamente
+```
+
+### **Checklist de Verificación:**
+- [ ] La página carga completamente
+- [ ] Después de 2 segundos, el audio se reproduce automáticamente
+- [ ] No se requiere ningún click manual
+- [ ] Los audios aleatorios se reproducen después del principal
+- [ ] No hay errores en la consola
+
+---
+
+## 🎨 **Características del Botón Oculto**
+
+```css
+.auto-click-button {
+    position: fixed;
+    top: -1000px;      /* Fuera de la vista */
+    left: -1000px;     /* Fuera de la vista */
+    width: 1px;
+    height: 1px;
+    opacity: 0;        /* Completamente invisible */
+    pointer-events: auto; /* Permite el click automático */
+    z-index: -1;       /* Detrás de todo */
+}
+```
+
+---
+
+## 🔄 **Flujo de Reproducción**
+
+1. **Carga inicial**: Página se carga, preloader se muestra
+2. **Preloader oculto**: Contenido se muestra después de 2 segundos
+3. **Click automático**: Botón oculto se hace clic automáticamente
+4. **Audio principal**: `audio_1.mp3` se reproduce
+5. **Audios aleatorios**: Cada vez que termina un audio, reproduce uno aleatorio del 2-6
+
+---
+
+## 🚨 **Solución de Problemas**
+
+### **Problema: Audio no se reproduce después de 2 segundos**
+
+**Verificar:**
+1. **Archivos de audio**: Deben estar en `public/audio/`
+2. **Configuración del navegador**: Usar flags correctos
+3. **Consola**: Revisar errores en F12
+
+**Solución:**
+```batch
+# Verificar archivos
+dir public\audio\audio_1.mp3
+
+# Reconfigurar navegador
+configurar_totem.bat
+```
+
+### **Problema: Audio se reproduce pero con retraso**
+
+**Solución:**
+- Los archivos se precargan automáticamente
+- El retraso de 2 segundos es intencional para asegurar que todo esté listo
+
+### **Problema: Audio se corta o no continúa**
+
+**Verificar:**
+- Que existan los archivos `audio_2.mp3` a `audio_6.mp3`
+- Que no haya errores de red en la consola
+
+---
+
+## 🎯 **Uso en Totem**
+
+### **Para un totem de exposición:**
+1. Configurar el navegador con `configurar_totem.bat`
+2. Cargar la página con el QR del cliente
+3. **No se requiere interacción adicional**
+4. El audio se reproduce automáticamente después de 2 segundos
+
+### **Comando completo recomendado:**
+```batch
+chrome.exe ^
+    --autoplay-policy=no-user-gesture-required ^
+    --disable-web-security ^
+    --kiosk ^
+    --disable-features=VizDisplayCompositor ^
+    --disable-background-timer-throttling ^
+    "http://localhost:8000/cliente/saludo"
+```
+
+---
+
+## 📞 **Soporte Técnico**
+
+Si el audio no funciona automáticamente:
+
+1. **Verificar logs**: F12 → Console
+2. **Verificar archivos**: `public/audio/` debe contener todos los MP3
+3. **Verificar navegador**: Debe tener los flags correctos
+4. **Verificar red**: Los archivos deben cargarse sin errores
+
+---
+
+## ✅ **Configuración Final para Totem**
+
+```batch
+# 1. Ejecutar configuración automática
+configurar_totem.bat
+
+# 2. Seleccionar modo Kiosk (opción 1)
+
+# 3. Usar URL completa con cliente
+# Ejemplo: http://localhost:8000/cliente/saludo
+
+# 4. ✅ El audio se reproduce automáticamente después de 2 segundos
+```
+
+**¡Listo para usar en totem sin interacción!** 🎵 
