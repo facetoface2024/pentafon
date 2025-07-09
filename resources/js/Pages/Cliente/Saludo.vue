@@ -76,7 +76,7 @@ const messageStructure = computed(() => {
         },
         {
             topText: '',
-            bottomText: '¡Llegaste justo a tiempo!\nInnovation Day 2025 está \n por despegar.¿Listo para transformar el mañana?'
+            bottomText: '¡Llegaste justo a tiempo!\nInnovation Day 2025 \n está  por despegar. \n ¿Listo para transformar el mañana?'
         },
         {
             topText: '',
