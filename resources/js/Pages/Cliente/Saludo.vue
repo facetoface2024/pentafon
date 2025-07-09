@@ -521,7 +521,7 @@ onUnmounted(() => {
     .message-card {
         /* Ajustar posición para tablets */
         top: 22%; /* Ajustar según necesidad */
-        left: 3%; /* Ajustar según necesidad */
+        left: 8%; /* Ajustar según necesidad */
         max-width: 1000px;
         width: 100%; /* Ajustar según necesidad */
     }
