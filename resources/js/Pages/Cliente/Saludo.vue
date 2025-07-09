@@ -439,7 +439,7 @@ onUnmounted(() => {
     position: absolute;
     top: 20%; /* Distancia desde arriba */
     left: 5%; /* Distancia desde la izquierda */
-    max-width: 900px;
+    max-width: 1000px;
     width: 45%; /* Ancho relativo al contenedor */
     z-index: 10;
 }
@@ -542,7 +542,7 @@ onUnmounted(() => {
         /* Ajustar posición para tablets */
         top: 21%; /* Ajustar según necesidad */
         left: 7%; /* Ajustar según necesidad */
-        max-width: 900px;
+        max-width: 1000px;
         width: 100%; /* Ajustar según necesidad */
     }
 
@@ -561,7 +561,7 @@ onUnmounted(() => {
         /* Ajustar posición para móviles */
         top: 1%; /* Ajustar según necesidad */
         left: 5%; /* Ajustar según necesidad */
-        max-width: 95%;
+        max-width: 100%;
         width: 90%; /* Ajustar según necesidad */
     }
 
