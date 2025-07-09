@@ -315,6 +315,9 @@ onUnmounted(() => {
         <meta name="robots" content="noindex, nofollow" />
         <link rel="icon" type="image/png" :href="seoConfig.favicon" />
 
+        <!-- Cargar fuente Prometo Trial -->
+        <link href="https://fonts.cdnfonts.com/css/prometo-trial" rel="stylesheet">
+
         <!-- Open Graph -->
         <meta property="og:title" :content="seoConfig.title" />
         <meta property="og:description" :content="seoConfig.description" />
@@ -326,24 +329,6 @@ onUnmounted(() => {
         <Preloader :is-loading="isLoading" @loaded="handleLoaded" />
 
         <v-main>
-            <!-- Header con logos -->
-            <header class="top-header">
-                <div class="logo-left">
-                    <img
-                        :src="`${baseUrl}/images/logo.svg`"
-                        alt="Pentafon Logo"
-                        class="logo-image"
-                    />
-                </div>
-                <div class="logo-right">
-                    <img
-                        :src="`${baseUrl}/images/innovation.svg`"
-                        alt="Innovation Logo"
-                        class="innovation-image"
-                    />
-                </div>
-            </header>
-
             <!-- Contenedor principal que incluye video y contenido -->
             <div class="welcome-container">
                 <!-- Video de fondo después del header -->
@@ -406,50 +391,8 @@ onUnmounted(() => {
     background: transparent !important;
 }
 
-.top-header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 120px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 4rem;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    z-index: 1000;
-    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
-}
-
-.logo-left, .logo-right {
-    display: flex;
-    align-items: center;
-}
-
-.logo-image {
-    height: 80px;
-    width: auto;
-    transition: transform 0.3s ease;
-}
-
-.logo-image:hover {
-    transform: scale(1.05);
-}
-
-.innovation-image {
-    height: 100px;
-    width: auto;
-    transition: transform 0.3s ease;
-}
-
-.innovation-image:hover {
-    transform: scale(1.05);
-}
-
 .welcome-container {
-    margin-top: 120px; /* Espacio para el header fijo */
-    min-height: calc(100vh - 120px);
+    min-height: 100vh;
     position: relative;
     background: transparent;
     overflow: hidden;
@@ -477,14 +420,14 @@ onUnmounted(() => {
 .main-content {
     position: relative;
     z-index: 2;
-    min-height: calc(100vh - 120px);
+    min-height: 100vh;
     background: transparent;
 }
 
 .content-overlay {
     position: relative;
     width: 100%;
-    height: calc(100vh - 120px);
+    height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -494,32 +437,11 @@ onUnmounted(() => {
 /* Posicionamiento específico del card para totem */
 .message-card {
     position: absolute;
-    /*
-    POSICIONAMIENTO PERSONALIZABLE:
-    - top: 0% = arriba del todo, 100% = abajo del todo
-    - left: 0% = izquierda del todo, 100% = derecha del todo
-    - También puedes usar: right, bottom en lugar de left, top
-
-    EJEMPLOS DE POSICIONAMIENTO:
-    - Esquina superior izquierda: top: 5%, left: 5%
-    - Esquina superior derecha: top: 5%, right: 5%
-    - Esquina inferior izquierda: bottom: 5%, left: 5%
-    - Esquina inferior derecha: bottom: 5%, right: 5%
-    - Centro: top: 50%, left: 50%, transform: translate(-50%, -50%)
-    */
     top: 20%; /* Distancia desde arriba */
     left: 5%; /* Distancia desde la izquierda */
-
-    /* Tamaño del card */
     max-width: 900px;
     width: 45%; /* Ancho relativo al contenedor */
-
-    /* Asegurar que esté encima del video */
     z-index: 10;
-
-    /* Para debugging - descomenta para ver el borde del card */
-    /* border: 2px solid red; */
-    /* background: rgba(255, 0, 0, 0.1); */
 }
 
 .typewriter-container {
@@ -528,8 +450,8 @@ onUnmounted(() => {
     border-radius: 25px;
 }
 
-.typewriter-text {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    .typewriter-text {
+    font-family: 'Prometo Trial', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     font-size: 4.5rem;
     line-height: 1.4;
     color: #1a1a1a;
@@ -574,32 +496,6 @@ onUnmounted(() => {
 
 /* Responsive para totem - Pantallas grandes */
 @media (min-width: 1400px) {
-    .top-header {
-        height: 140px;
-        padding: 0 5rem;
-    }
-
-    .logo-image {
-        height: 100px;
-    }
-
-    .innovation-image {
-        height: 120px;
-    }
-
-    .welcome-container {
-        margin-top: 140px;
-        min-height: calc(100vh - 140px);
-    }
-
-    .main-content {
-        min-height: calc(100vh - 140px);
-    }
-
-    .content-overlay {
-        height: calc(100vh - 140px);
-    }
-
     .message-card {
         /* Ajustar posición para pantallas grandes */
         top: 1%; /* Ajustar según necesidad */
@@ -621,32 +517,6 @@ onUnmounted(() => {
 
 /* Pantallas extra grandes (40+ pulgadas) */
 @media (min-width: 1920px) {
-    .top-header {
-        height: 160px;
-        padding: 0 6rem;
-    }
-
-    .logo-image {
-        height: 120px;
-    }
-
-    .innovation-image {
-        height: 140px;
-    }
-
-    .welcome-container {
-        margin-top: 160px;
-        min-height: calc(100vh - 160px);
-    }
-
-    .main-content {
-        min-height: calc(100vh - 160px);
-    }
-
-    .content-overlay {
-        height: calc(100vh - 160px);
-    }
-
     .message-card {
         /* Ajustar posición para pantallas extra grandes */
         top: 1%; /* Ajustar según necesidad */
@@ -668,38 +538,12 @@ onUnmounted(() => {
 
 /* Responsive - Tablets */
 @media (max-width: 1399px) and (min-width: 768px) {
-    .top-header {
-        height: 100px;
-        padding: 0 3rem;
-    }
-
-    .logo-image {
-        height: 60px;
-    }
-
-    .innovation-image {
-        height: 80px;
-    }
-
-    .welcome-container {
-        margin-top: 100px;
-        min-height: calc(100vh - 100px);
-    }
-
-    .main-content {
-        min-height: calc(100vh - 100px);
-    }
-
-    .content-overlay {
-        height: calc(100vh - 100px);
-    }
-
     .message-card {
         /* Ajustar posición para tablets */
-        top: 1%; /* Ajustar según necesidad */
-        left: 1%; /* Ajustar según necesidad */
+        top: 25%; /* Ajustar según necesidad */
+        left: 13%; /* Ajustar según necesidad */
         max-width: 800px;
-        width: 74%; /* Ajustar según necesidad */
+        width: 100%; /* Ajustar según necesidad */
     }
 
     .typewriter-container {
@@ -713,32 +557,6 @@ onUnmounted(() => {
 
 /* Responsive - Móviles */
 @media (max-width: 767px) {
-    .top-header {
-        height: 80px;
-        padding: 0 2rem;
-    }
-
-    .logo-image {
-        height: 45px;
-    }
-
-    .innovation-image {
-        height: 60px;
-    }
-
-    .welcome-container {
-        margin-top: 80px;
-        min-height: calc(100vh - 80px);
-    }
-
-    .main-content {
-        min-height: calc(100vh - 80px);
-    }
-
-    .content-overlay {
-        height: calc(100vh - 80px);
-    }
-
     .message-card {
         /* Ajustar posición para móviles */
         top: 1%; /* Ajustar según necesidad */
