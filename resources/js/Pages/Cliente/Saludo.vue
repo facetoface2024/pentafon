@@ -336,7 +336,7 @@ onUnmounted(() => {
                             <!-- Nombre -->
                             <transition name="fade-in">
                                 <div v-if="showName" class="text-section">
-                                    <p class="message-text nombre-text">{{ nombreCompleto }}!</p>
+                                    <p class="message-text nombre-text">{{ nombreCompleto }}</p>
                                 </div>
                             </transition>
 
