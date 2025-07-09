@@ -44,9 +44,9 @@ const nombreCompleto = computed(() => {
         props.cliente.apellido_paterno
     ].filter(parte => parte && parte !== null && parte !== 'null' && parte.trim() !== '');
 
-    // Capitalizar la primera letra de cada parte
+    // Capitalizar solo la primera letra de cada parte, manteniendo el resto como está en BD
     const partesCapitalizadas = partes.map(parte => {
-        return parte.charAt(0).toUpperCase() + parte.slice(1).toLowerCase();
+        return parte.charAt(0).toUpperCase() + parte.slice(1);
     });
 
     return partesCapitalizadas.join(' ');
@@ -258,7 +258,7 @@ onMounted(async () => {
         setTimeout(() => {
             const videoElement = document.querySelector('#background-video') as HTMLVideoElement;
             if (videoElement) {
-             
+
                 if (videoElement.paused && videoElement.readyState >= 2) {
                     console.log('⚠️ Video está pausado pero listo, intentando reproducir...');
                     videoElement.play().catch(error => {
