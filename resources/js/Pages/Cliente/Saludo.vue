@@ -68,11 +68,11 @@ const messageStructure = computed(() => {
         },
         {
             topText: '¡Hola!',
-            bottomText: 'Despierta tu mente, rompe los límites.\nBienvenido, el futuro te espera'
+            bottomText: 'Despierta tu mente, \n rompe los límites.\nBienvenido, el futuro te espera'
         },
         {
             topText: '¡Hola!',
-            bottomText: 'Tu visión es parte de esta revolución.\n¡Bienvenido!'
+            bottomText: 'Tu visión es parte de \n esta revolución.\n¡Bienvenido!'
         },
         {
             topText: '',
@@ -437,7 +437,7 @@ onUnmounted(() => {
 
 .message-text {
     font-family: 'Prometo Trial', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    font-size: 5rem;
+    font-size: 6rem;
     line-height: 1.4;
     color: #1a1a1a;
     margin: 0;
@@ -450,7 +450,7 @@ onUnmounted(() => {
 /* Estilo específico para el nombre */
 .nombre-text {
     color: #eb1c2d;
-    font-weight: 700;
+    font-weight: 900;
     font-size: 1.1em;
 }
 
@@ -485,12 +485,12 @@ onUnmounted(() => {
     }
 
     .text-section {
-        padding: 1.5rem 5rem;
+        padding: 1rem 4rem;
         border-radius: 30px;
     }
 
     .message-text {
-        font-size: 3.2rem;
+        font-size: 3.84rem;
         line-height: 1.5;
     }
 }
@@ -511,7 +511,7 @@ onUnmounted(() => {
     }
 
     .message-text {
-        font-size: 3.2rem;
+        font-size: 3.84rem;
         line-height: 1.4;
     }
 }
@@ -520,18 +520,18 @@ onUnmounted(() => {
 @media (max-width: 1399px) and (min-width: 768px) {
     .message-card {
         /* Ajustar posición para tablets */
-        top: 21%; /* Ajustar según necesidad */
-        left: 7%; /* Ajustar según necesidad */
+        top: 22%; /* Ajustar según necesidad */
+        left: 3%; /* Ajustar según necesidad */
         max-width: 1000px;
         width: 100%; /* Ajustar según necesidad */
     }
 
-    .text-section {
-        padding: 1rem 2.9rem;
-    }
+   /*  .text-section {
+        padding: 0.5rem 2rem;
+    } */
 
     .message-text {
-        font-size: 3.2rem;
+        font-size: 3.84rem;
     }
 }
 
@@ -551,7 +551,7 @@ onUnmounted(() => {
     }
 
     .message-text {
-        font-size: 1.4rem;
+        font-size: 1.68rem;
     }
 }
 </style>
