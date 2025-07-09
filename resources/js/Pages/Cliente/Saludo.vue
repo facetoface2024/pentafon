@@ -76,11 +76,11 @@ const messageStructure = computed(() => {
         },
         {
             topText: '',
-            bottomText: 'llegaste justo a tiempo!\nInnovation Day 2025 está por despegar.\n¿Listo para transformar el mañana?'
+            bottomText: '¡Llegaste justo a tiempo!\nInnovation Day 2025 está \n por despegar.¿Listo para transformar el mañana?'
         },
         {
             topText: '',
-            bottomText: 'Bienvenido al epicentro de la innovación!\nHoy las ideas se convierten en acción.'
+            bottomText: '¡Bienvenido al epicentro de la innovación!\nHoy las ideas se convierten en acción.'
         }
     ];
 
