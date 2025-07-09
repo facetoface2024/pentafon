@@ -25,22 +25,23 @@ interface Props {
 const props = defineProps<Props>();
 
 const isLoading = ref(true);
-const typewriterText = ref('');
 const showContent = ref(false);
+
+// Variables para animaciones secuenciales
+const showTopText = ref(false);
+const showName = ref(false);
+const showBottomText = ref(false);
 
 // Video related refs
 const currentVideo = ref<HTMLVideoElement | null>(null);
 const videoLoaded = ref(false);
 const selectedVideoPath = ref('');
 
-// Cache maps para precarga de videos
-
-// Construir nombre completo filtrando valores null/vacíos y capitalizando iniciales
+// Construir nombre completo usando solo nombre y apellido paterno con iniciales en mayúsculas
 const nombreCompleto = computed(() => {
     const partes = [
         props.cliente.nombre,
-        props.cliente.apellido_paterno,
-        props.cliente.apellido_materno
+        props.cliente.apellido_paterno
     ].filter(parte => parte && parte !== null && parte !== 'null' && parte.trim() !== '');
 
     // Capitalizar la primera letra de cada parte
@@ -54,34 +55,36 @@ const nombreCompleto = computed(() => {
 // Índice del mensaje seleccionado aleatoriamente
 const messageIndex = ref(0);
 
-// Mensaje personalizado con nombre completo - selección aleatoria
-const welcomeMessage = computed(() => {
-    // Array de mensajes de saludo
-    const welcomeMessages = [
-        `¡Hola <span class="nombre-bold">${nombreCompleto.value}</span>!
-Bienvenido.
-El futuro comienza hoy.`,
-
-        `¡Bienvenido <span class="nombre-bold">${nombreCompleto.value}</span>!
-Gracias por ser parte del cambio.`,
-
-        `¡Hola <span class="nombre-bold">${nombreCompleto.value}</span>!
-Despierta tu mente, rompe los límites.
- Bienvenido, el futuro te espera.`,
-
-        `¡Hola, <span class="nombre-bold">${nombreCompleto.value}</span>!
-Tu visión es parte de esta revolución.
-¡Bienvenido!`,
-
-        `¡<span class="nombre-bold">${nombreCompleto.value}</span>, llegaste justo a tiempo!
-Innovation Day 2025 está por despegar.
-¿Listo para transformar el mañana?`,
-
-        `¡<span class="nombre-bold">${nombreCompleto.value}</span>, Bienvenido al epicentro de la innovación!
-Hoy las ideas se convierten en acción.`
+// Estructura de mensajes separados por partes
+const messageStructure = computed(() => {
+    const messages = [
+        {
+            topText: '¡Hola!',
+            bottomText: 'Bienvenido.\nEl futuro comienza hoy'
+        },
+        {
+            topText: '¡Bienvenido!',
+            bottomText: 'Gracias por ser parte del cambio'
+        },
+        {
+            topText: '¡Hola!',
+            bottomText: 'Despierta tu mente, rompe los límites.\nBienvenido, el futuro te espera'
+        },
+        {
+            topText: '¡Hola!',
+            bottomText: 'Tu visión es parte de esta revolución.\n¡Bienvenido!'
+        },
+        {
+            topText: '',
+            bottomText: 'llegaste justo a tiempo!\nInnovation Day 2025 está por despegar.\n¿Listo para transformar el mañana?'
+        },
+        {
+            topText: '',
+            bottomText: 'Bienvenido al epicentro de la innovación!\nHoy las ideas se convierten en acción.'
+        }
     ];
 
-    return welcomeMessages[messageIndex.value];
+    return messages[messageIndex.value];
 });
 
 const handleLoaded = () => {
@@ -177,38 +180,27 @@ const playBackgroundVideo = async (): Promise<void> => {
     }
 };
 
-// Funciones de audio eliminadas - solo se usa video y texto
+// Función para iniciar las animaciones secuenciales
+const startSequentialAnimations = () => {
+    console.log('🎭 Iniciando animaciones secuenciales...');
 
-// Efecto typewriter modificado para HTML
-const startTypewriter = () => {
-    let index = 0;
-    const speed = 50;
-    const message = welcomeMessage.value;
+    // Mostrar texto superior primero
+    setTimeout(() => {
+        showTopText.value = true;
+        console.log('📝 Mostrando texto superior');
+    }, 500);
 
-    const typeNextChar = () => {
-        if (index < message.length) {
-            // Si el caracter actual es '<', encontrar el final del tag
-            if (message.charAt(index) === '<') {
-                const endTag = message.indexOf('>', index);
-                if (endTag !== -1) {
-                    // Agregar todo el tag de una vez
-                    typewriterText.value += message.substring(index, endTag + 1);
-                    index = endTag + 1;
-                } else {
-                    // Si no hay cierre de tag, agregar el caracter normalmente
-                    typewriterText.value += message.charAt(index);
-                    index++;
-                }
-            } else {
-                // Agregar caracter normal
-                typewriterText.value += message.charAt(index);
-                index++;
-            }
-            setTimeout(typeNextChar, speed);
-        }
-    };
+    // Mostrar nombre después
+    setTimeout(() => {
+        showName.value = true;
+        console.log('👤 Mostrando nombre');
+    }, 1200);
 
-    typeNextChar();
+    // Mostrar texto inferior al final
+    setTimeout(() => {
+        showBottomText.value = true;
+        console.log('📝 Mostrando texto inferior');
+    }, 1900);
 };
 
 // Watcher para selectedVideoPath
@@ -234,8 +226,6 @@ watch(selectedVideoPath, async (newPath) => {
     }
 });
 
-// Funciones de auto-click eliminadas junto con audio
-
 onMounted(async () => {
     console.log('🎬 Componente montado, iniciando secuencia...');
 
@@ -250,8 +240,6 @@ onMounted(async () => {
     // Precargar recursos
     preloadVideos();
 
-    // Solo se precargan videos - audio eliminado
-
     // Dar tiempo adicional para que el video se configure
     setTimeout(async () => {
         console.log('🎬 Iniciando reproducción de video...');
@@ -261,30 +249,16 @@ onMounted(async () => {
         isLoading.value = false;
         showContent.value = true;
 
-        // Iniciar typewriter
+        // Iniciar animaciones secuenciales
         setTimeout(() => {
-            startTypewriter();
+            startSequentialAnimations();
         }, 300);
-
-        // Ya no se configura audio automático
 
         // Debug del video después de un delay
         setTimeout(() => {
             const videoElement = document.querySelector('#background-video') as HTMLVideoElement;
             if (videoElement) {
-                console.log('🔍 DEBUG Video Status:');
-                console.log(`  - src: ${videoElement.src}`);
-                console.log(`  - readyState: ${videoElement.readyState}`);
-                console.log(`  - paused: ${videoElement.paused}`);
-                console.log(`  - currentTime: ${videoElement.currentTime}`);
-                console.log(`  - duration: ${videoElement.duration}`);
-                console.log(`  - error: ${videoElement.error}`);
-                                console.log(`  - networkState: ${videoElement.networkState}`);
-                console.log(`  - visibility: ${getComputedStyle(videoElement).visibility}`);
-                console.log(`  - display: ${getComputedStyle(videoElement).display}`);
-                console.log(`  - opacity: ${getComputedStyle(videoElement).opacity}`);
-                console.log(`  - z-index: ${getComputedStyle(videoElement).zIndex}`);
-
+             
                 if (videoElement.paused && videoElement.readyState >= 2) {
                     console.log('⚠️ Video está pausado pero listo, intentando reproducir...');
                     videoElement.play().catch(error => {
@@ -303,8 +277,6 @@ onUnmounted(() => {
         currentVideo.value.pause();
         currentVideo.value = null;
     }
-
-    // Cache de audio eliminado
 });
 </script>
 
@@ -351,16 +323,31 @@ onUnmounted(() => {
 
                 <!-- Contenido principal sobre el video -->
                 <div class="main-content">
-                    <transition name="fade-in">
-                        <div v-if="showContent" class="content-overlay">
-                            <!-- Card del mensaje posicionado específicamente -->
-                            <div class="message-card">
-                                <div class="typewriter-container">
-                                    <p class="typewriter-text" v-html="typewriterText + '<span class=&quot;cursor&quot;>|</span>'"></p>
+                    <div v-if="showContent" class="content-overlay">
+                        <!-- Card del mensaje posicionado específicamente -->
+                        <div class="message-card">
+                            <!-- Texto superior -->
+                            <transition name="fade-in">
+                                <div v-if="showTopText && messageStructure.topText" class="text-section">
+                                    <p class="message-text">{{ messageStructure.topText }}</p>
                                 </div>
-                            </div>
+                            </transition>
+
+                            <!-- Nombre -->
+                            <transition name="fade-in">
+                                <div v-if="showName" class="text-section">
+                                    <p class="message-text nombre-text">{{ nombreCompleto }}!</p>
+                                </div>
+                            </transition>
+
+                            <!-- Texto inferior -->
+                            <transition name="fade-in">
+                                <div v-if="showBottomText" class="text-section">
+                                    <p class="message-text bottom-text">{{ messageStructure.bottomText }}</p>
+                                </div>
+                            </transition>
                         </div>
-                    </transition>
+                    </div>
                 </div>
             </div>
         </v-main>
@@ -444,13 +431,11 @@ onUnmounted(() => {
     z-index: 10;
 }
 
-.typewriter-container {
-
-    padding: 4rem;
+.text-section {
     border-radius: 25px;
 }
 
-    .typewriter-text {
+.message-text {
     font-family: 'Prometo Trial', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     font-size: 5rem;
     line-height: 1.4;
@@ -462,21 +447,16 @@ onUnmounted(() => {
     font-weight: 500;
 }
 
-/* Estilo para nombres en negritas */
-.nombre-bold {
+/* Estilo específico para el nombre */
+.nombre-text {
+    color: #eb1c2d;
     font-weight: 700;
     font-size: 1.1em;
 }
 
-.cursor {
-    animation: blink 1s infinite;
-    color: #eb1c2d;
-    font-weight: bold;
-}
-
-@keyframes blink {
-    0%, 50% { opacity: 1; }
-    51%, 100% { opacity: 0; }
+/* Estilo para texto inferior */
+.bottom-text {
+    margin-top: 1rem;
 }
 
 /* Transiciones */
@@ -504,12 +484,12 @@ onUnmounted(() => {
         width: 45%; /* Ajustar según necesidad */
     }
 
-    .typewriter-container {
-        padding: 5rem;
+    .text-section {
+        padding: 1.5rem 5rem;
         border-radius: 30px;
     }
 
-    .typewriter-text {
+    .message-text {
         font-size: 3.2rem;
         line-height: 1.5;
     }
@@ -525,12 +505,12 @@ onUnmounted(() => {
         width: 45%; /* Ajustar según necesidad */
     }
 
-    .typewriter-container {
-        padding: 6rem;
+    .text-section {
+        padding: 2rem 6rem;
         border-radius: 35px;
     }
 
-    .typewriter-text {
+    .message-text {
         font-size: 3.2rem;
         line-height: 1.4;
     }
@@ -546,11 +526,11 @@ onUnmounted(() => {
         width: 100%; /* Ajustar según necesidad */
     }
 
-    .typewriter-container {
-        padding: 2.9rem;
+    .text-section {
+        padding: 1rem 2.9rem;
     }
 
-    .typewriter-text {
+    .message-text {
         font-size: 3.2rem;
     }
 }
@@ -565,12 +545,12 @@ onUnmounted(() => {
         width: 90%; /* Ajustar según necesidad */
     }
 
-    .typewriter-container {
-        padding: 2rem;
+    .text-section {
+        padding: 1rem 2rem;
         border-radius: 20px;
     }
 
-    .typewriter-text {
+    .message-text {
         font-size: 1.4rem;
     }
 }
