@@ -59,7 +59,7 @@ const welcomeMessage = computed(() => {
     // Array de mensajes de saludo
     const welcomeMessages = [
         `¡Hola <span class="nombre-bold">${nombreCompleto.value}</span>!
-Bienvenido a Innovation Day 2025.
+Bienvenido.
 El futuro comienza hoy.`,
 
         `¡Bienvenido <span class="nombre-bold">${nombreCompleto.value}</span>!
@@ -67,11 +67,11 @@ Gracias por ser parte del cambio.`,
 
         `¡Hola <span class="nombre-bold">${nombreCompleto.value}</span>!
 Despierta tu mente, rompe los límites.
-Innovation Day 2025 te espera.`,
+ Bienvenido, el futuro te espera.`,
 
         `¡Hola, <span class="nombre-bold">${nombreCompleto.value}</span>!
 Tu visión es parte de esta revolución.
-¡Bienvenido a Innovation Day 2025!`,
+¡Bienvenido!`,
 
         `¡<span class="nombre-bold">${nombreCompleto.value}</span>, llegaste justo a tiempo!
 Innovation Day 2025 está por despegar.
@@ -541,7 +541,7 @@ onUnmounted(() => {
     .message-card {
         /* Ajustar posición para tablets */
         top: 21%; /* Ajustar según necesidad */
-        left: 10%; /* Ajustar según necesidad */
+        left: 7%; /* Ajustar según necesidad */
         max-width: 900px;
         width: 100%; /* Ajustar según necesidad */
     }
