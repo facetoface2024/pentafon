@@ -452,7 +452,7 @@ onUnmounted(() => {
 
     .typewriter-text {
     font-family: 'Prometo Trial', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    font-size: 4.5rem;
+    font-size: 5rem;
     line-height: 1.4;
     color: #1a1a1a;
     margin: 0;
@@ -540,9 +540,9 @@ onUnmounted(() => {
 @media (max-width: 1399px) and (min-width: 768px) {
     .message-card {
         /* Ajustar posición para tablets */
-        top: 25%; /* Ajustar según necesidad */
-        left: 13%; /* Ajustar según necesidad */
-        max-width: 800px;
+        top: 21%; /* Ajustar según necesidad */
+        left: 10%; /* Ajustar según necesidad */
+        max-width: 900px;
         width: 100%; /* Ajustar según necesidad */
     }
 
@@ -551,7 +551,7 @@ onUnmounted(() => {
     }
 
     .typewriter-text {
-        font-size: 2.75rem;
+        font-size: 3.2rem;
     }
 }
 
