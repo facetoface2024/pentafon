@@ -453,7 +453,7 @@ onUnmounted(() => {
 .message-card {
     position: absolute;
     top: 20%; /* Distancia desde arriba */
-    left: 5%; /* Distancia desde la izquierda */
+    left: 4.5%; /* Distancia desde la izquierda */
     max-width: 1000px;
     width: 100%; /* Ancho relativo al contenedor */
     z-index: 10;
@@ -507,9 +507,9 @@ onUnmounted(() => {
     .message-card {
         /* Ajustar posición para pantallas grandes */
         top: 1%; /* Ajustar según necesidad */
-        left: 5%; /* Ajustar según necesidad */
-        max-width: 1200px;
-        width: 45%; /* Ajustar según necesidad */
+        left: 4.5%; /* Ajustar según necesidad */
+        max-width: 1000px;
+        width: 100%; /* Ajustar según necesidad */
     }
 
     .text-section {
@@ -528,9 +528,9 @@ onUnmounted(() => {
     .message-card {
         /* Ajustar posición para pantallas extra grandes */
         top: 1%; /* Ajustar según necesidad */
-        left: 5%; /* Ajustar según necesidad */
-        max-width: 1400px;
-        width: 45%; /* Ajustar según necesidad */
+        left: 4.5%; /* Ajustar según necesidad */
+        max-width: 1000px;
+        width: 100%; /* Ajustar según necesidad */
     }
 
     .text-section {
@@ -549,7 +549,7 @@ onUnmounted(() => {
     .message-card {
         /* Ajustar posición para tablets */
         top: 22%; /* Ajustar según necesidad */
-        left: 5%; /* Ajustar según necesidad */
+        left: 4.5%; /* Ajustar según necesidad */
         max-width: 1000px;
         width: 100%; /* Ajustar según necesidad */
     }
@@ -568,7 +568,7 @@ onUnmounted(() => {
     .message-card {
         /* Ajustar posición para móviles */
         top: 1%; /* Ajustar según necesidad */
-        left: 5%; /* Ajustar según necesidad */
+        left: 4.5%; /* Ajustar según necesidad */
         max-width: 100%;
         width: 90%; /* Ajustar según necesidad */
     }
