@@ -99,32 +99,175 @@ const seoConfig = computed(() => ({
     favicon: `${baseUrl.value}/images/favicon.png`
 }));
 
-// Función para seleccionar video aleatorio (como los mensajes)
-const selectRandomVideo = (): string => {
-    const videoNumber = Math.floor(Math.random() * 3) + 1; // Números del 1 al 3
-    const videoPath = `/video/fondo_video_${videoNumber}.mp4`;
-    console.log(`🎲 Video seleccionado aleatoriamente: ${videoPath}`);
+// Función para seleccionar video de forma secuencial
+const selectSequentialVideo = (): string => {
+    // Obtener el último video usado del localStorage
+    const lastVideoNumber = parseInt(localStorage.getItem('lastVideoNumber') || '0');
+
+    // Calcular el siguiente video en secuencia (1, 2, 3, 1, 2, 3...)
+    const nextVideoNumber = (lastVideoNumber % 3) + 1;
+
+    // Guardar el nuevo número en localStorage
+    localStorage.setItem('lastVideoNumber', nextVideoNumber.toString());
+
+    const videoPath = `/video/fondo_video_${nextVideoNumber}.mp4`;
     return videoPath;
 };
 
-// Función para precargar videos (simplificada)
-const preloadVideos = (): void => {
-    console.log('📹 Precargando videos...');
+// Función para verificar si los videos están en cache
+const checkVideoCache = (): boolean => {
+    const cacheKey = 'videos_preloaded';
+    const cacheTimestamp = localStorage.getItem(cacheKey);
 
-    // Precargar solo los videos que podrían ser necesarios
-    for (let i = 1; i <= 3; i++) {
-        const videoPath = `/video/fondo_video_${i}.mp4`;
+    if (!cacheTimestamp) return false;
 
-        // Crear elemento link para precargar
-        const link = document.createElement('link');
-        link.rel = 'preload';
-        link.as = 'video';
-        link.href = videoPath;
-        link.type = 'video/mp4';
-        document.head.appendChild(link);
+    // Verificar si el cache no es muy antiguo (24 horas)
+    const now = Date.now();
+    const cacheAge = now - parseInt(cacheTimestamp);
+    const maxCacheAge = 24 * 60 * 60 * 1000; // 24 horas
+
+    return cacheAge < maxCacheAge;
+};
+
+// Función para limpiar cache de videos si es necesario
+const clearVideoCache = async (): Promise<void> => {
+    // Limpiar localStorage
+    localStorage.removeItem('videos_preloaded');
+    localStorage.removeItem('lastVideoNumber');
+
+    // Limpiar cache del navegador si está disponible
+    if ('caches' in window) {
+        try {
+            const cacheNames = await caches.keys();
+            const videoCache = cacheNames.find(name => name.includes('video-cache'));
+            if (videoCache) {
+                await caches.delete(videoCache);
+
+            }
+        } catch (error) {
+            console.warn('⚠️ No se pudo limpiar cache del navegador:', error);
+        }
     }
 
-    console.log('📹 Enlaces de precarga de videos creados');
+};
+
+// Función para obtener información del cache
+const getCacheInfo = async (): Promise<void> => {
+    const localStorageInfo = {
+        videos_preloaded: localStorage.getItem('videos_preloaded'),
+        lastVideoNumber: localStorage.getItem('lastVideoNumber')
+    };
+
+
+
+    if ('caches' in window) {
+        try {
+            const cacheNames = await caches.keys();
+
+
+            for (const cacheName of cacheNames) {
+                if (cacheName.includes('video')) {
+                    const cache = await caches.open(cacheName);
+                    const keys = await cache.keys();
+
+                }
+            }
+        } catch (error) {
+            console.warn('⚠️ No se pudo obtener información del cache:', error);
+        }
+    }
+};
+
+// Función para optimizar cache con headers adicionales
+const optimizeVideoCache = (videoElement: HTMLVideoElement): void => {
+    // Configurar headers de cache para mejor rendimiento
+    videoElement.setAttribute('crossorigin', 'anonymous');
+    videoElement.setAttribute('preload', 'auto');
+
+    // Configurar propiedades para mejor cache
+    videoElement.setAttribute('webkit-playsinline', 'true');
+    videoElement.setAttribute('playsinline', 'true');
+
+    // Verificar si el navegador soporta cache API
+    if ('caches' in window) {
+        // Intentar agregar el video al cache del navegador
+        caches.open('video-cache-v1').then(cache => {
+            cache.add(videoElement.src).catch(error => {
+                console.warn('⚠️ No se pudo agregar video al cache:', error);
+            });
+        }).catch(error => {
+            console.warn('⚠️ No se pudo abrir cache:', error);
+        });
+    }
+
+
+};
+
+// Función mejorada para precargar videos con cache optimizado
+const preloadVideos = (): Promise<void> => {
+
+
+    // Verificar si los videos ya están en cache
+    if (checkVideoCache()) {
+        return Promise.resolve();
+    }
+
+    return new Promise((resolve) => {
+        const videosToPreload = [1, 2, 3];
+        let videosLoaded = 0;
+        const totalVideos = videosToPreload.length;
+
+        const checkAllLoaded = () => {
+            videosLoaded++;
+            if (videosLoaded === totalVideos) {
+
+                // Marcar videos como precargados en localStorage
+                localStorage.setItem('videos_preloaded', Date.now().toString());
+                resolve();
+            }
+        };
+
+        videosToPreload.forEach((videoNumber) => {
+            const videoPath = `/video/fondo_video_${videoNumber}.mp4`;
+
+            // Crear elemento video invisible para precarga real
+            const video = document.createElement('video');
+            video.preload = 'auto';
+            video.muted = true;
+            video.style.display = 'none';
+            video.src = videoPath;
+
+            // Configurar cache headers
+            video.setAttribute('crossorigin', 'anonymous');
+
+            video.addEventListener('loadeddata', () => {
+
+                // Remover el elemento temporal del DOM
+                document.body.removeChild(video);
+                checkAllLoaded();
+            });
+
+            video.addEventListener('error', (error) => {
+                console.warn(`⚠️ Error precargando video ${videoNumber}:`, error);
+                // Remover el elemento temporal del DOM
+                if (document.body.contains(video)) {
+                    document.body.removeChild(video);
+                }
+                checkAllLoaded(); // Continuar aunque falle uno
+            });
+
+            // Agregar al DOM temporalmente para activar la precarga
+            document.body.appendChild(video);
+
+            // Crear también el link preload para doble seguridad
+            const link = document.createElement('link');
+            link.rel = 'preload';
+            link.as = 'video';
+            link.href = videoPath;
+            link.type = 'video/mp4';
+            document.head.appendChild(link);
+        });
+    });
 };
 
 // Función para configurar el loop personalizado del video
@@ -132,7 +275,7 @@ const setupVideoLoop = (videoElement: HTMLVideoElement): void => {
     const handleTimeUpdate = () => {
         // Cuando el video llegue al segundo 12, saltar al segundo 8
         if (videoElement.currentTime >= 12) {
-            console.log('🔄 Video llegó al segundo 12, saltando al segundo 8');
+
             videoElement.currentTime = 8;
         }
     };
@@ -143,7 +286,7 @@ const setupVideoLoop = (videoElement: HTMLVideoElement): void => {
     // Guardar la función para poder removerla después
     (videoElement as any).loopHandler = handleTimeUpdate;
 
-    console.log('🎬 Loop personalizado configurado: segundos 8-12');
+
 };
 
 // Función para reproducir video de fondo
@@ -157,13 +300,13 @@ const playBackgroundVideo = async (): Promise<void> => {
             return;
         }
 
-        console.log(`🎬 Configurando video: ${videoElement.src}`);
+
 
         // Esperar a que se cargue el video si aún no está cargado
         if (videoElement.readyState < 3) { // HAVE_FUTURE_DATA
             await new Promise<void>((resolve, reject) => {
                 const onLoadedData = () => {
-                    console.log('✅ Video cargado correctamente');
+
                     videoElement.removeEventListener('loadeddata', onLoadedData);
                     videoElement.removeEventListener('error', onError);
                     resolve();
@@ -181,6 +324,9 @@ const playBackgroundVideo = async (): Promise<void> => {
             });
         }
 
+        // Optimizar cache del video
+        optimizeVideoCache(videoElement);
+
         // Configurar el loop personalizado antes de reproducir
         setupVideoLoop(videoElement);
 
@@ -189,7 +335,7 @@ const playBackgroundVideo = async (): Promise<void> => {
             await videoElement.play();
             currentVideo.value = videoElement;
             videoLoaded.value = true;
-            console.log('✅ Video de fondo reproduciéndose con loop personalizado');
+
         } catch (playError) {
             console.warn('⚠️ Video no pudo reproducirse automáticamente, esperando interacción del usuario');
             // El video se reproducirá cuando el usuario interactúe
@@ -204,39 +350,33 @@ const playBackgroundVideo = async (): Promise<void> => {
 
 // Función para iniciar las animaciones secuenciales
 const startSequentialAnimations = () => {
-    console.log('🎭 Iniciando animaciones secuenciales...');
 
     // Mostrar texto superior primero (500ms + 20% = 600ms)
     setTimeout(() => {
         showTopText.value = true;
-        console.log('📝 Mostrando texto superior');
     }, 2000);
 
     // Mostrar nombre después (1200ms + 20% = 1440ms)
     setTimeout(() => {
         showName.value = true;
-        console.log('👤 Mostrando nombre');
     }, 4000);
 
     // Mostrar texto inferior al final (1900ms + 20% = 2280ms)
     setTimeout(() => {
         showBottomText.value = true;
-        console.log('📝 Mostrando texto inferior');
     }, 6000);
 };
 
 // Watcher para selectedVideoPath
 watch(selectedVideoPath, async (newPath) => {
     if (newPath) {
-        console.log(`📺 selectedVideoPath cambió a: ${newPath}`);
+
 
         // Esperar al siguiente tick para asegurar que el DOM esté actualizado
         await nextTick();
 
         const videoElement = document.querySelector('#background-video') as HTMLVideoElement;
         if (videoElement) {
-            console.log(`🎬 Video element src: ${videoElement.src}`);
-            console.log(`🎬 Video element readyState: ${videoElement.readyState}`);
 
             // Verificar si el src está configurado correctamente
             if (!videoElement.src || videoElement.src === window.location.href) {
@@ -249,58 +389,67 @@ watch(selectedVideoPath, async (newPath) => {
 });
 
 onMounted(async () => {
-    console.log('🎬 Componente montado, iniciando secuencia...');
+
+    // Exponer funciones de cache globalmente para debug
+    (window as any).clearVideoCache = clearVideoCache;
+    (window as any).getCacheInfo = getCacheInfo;
+
+    // Mostrar información del cache al inicio
+    await getCacheInfo();
 
     // Seleccionar mensaje aleatoriamente
     messageIndex.value = Math.floor(Math.random() * 6);
-    console.log(`💬 Mensaje seleccionado aleatoriamente: ${messageIndex.value + 1}`);
 
-    // Seleccionar video aleatoriamente para establecer el src
-    selectedVideoPath.value = selectRandomVideo();
-    console.log(`🎬 Video seleccionado: ${selectedVideoPath.value}`);
 
-    // Precargar recursos
-    preloadVideos();
+    // Seleccionar video secuencialmente para establecer el src
+    selectedVideoPath.value = selectSequentialVideo();
 
-    // Dar tiempo adicional para que el video se configure
-    setTimeout(async () => {
-        console.log('🎬 Iniciando reproducción de video...');
-        await playBackgroundVideo();
 
-        // Ocultar preloader y mostrar contenido
+    try {
+        // Precargar recursos y esperar a que terminen
+        await preloadVideos();
+
+
+        // Dar tiempo adicional para que el video se configure
+        setTimeout(async () => {
+            await playBackgroundVideo();
+
+            // Ocultar preloader y mostrar contenido
+            isLoading.value = false;
+            showContent.value = true;
+
+            // Iniciar animaciones secuenciales
+            setTimeout(() => {
+                startSequentialAnimations();
+            }, 300);
+
+            // Debug del video después de un delay
+            setTimeout(() => {
+                const videoElement = document.querySelector('#background-video') as HTMLVideoElement;
+                if (videoElement) {
+                    if (videoElement.paused && videoElement.readyState >= 2) {
+                        videoElement.play().catch(error => {
+                            console.error('❌ Error al reproducir video en debug:', error);
+                        });
+                    }
+                }
+            }, 1000);
+        }, 1000); // Reducido de 2000 a 1000 ya que ya tenemos los videos precargados
+    } catch (error) {
+        console.error('❌ Error en el proceso de carga:', error);
+        // Continuar con la carga aunque falle la precarga
         isLoading.value = false;
         showContent.value = true;
-
-        // Iniciar animaciones secuenciales
-        setTimeout(() => {
-            startSequentialAnimations();
-        }, 300);
-
-        // Debug del video después de un delay
-        setTimeout(() => {
-            const videoElement = document.querySelector('#background-video') as HTMLVideoElement;
-            if (videoElement) {
-
-                if (videoElement.paused && videoElement.readyState >= 2) {
-                    console.log('⚠️ Video está pausado pero listo, intentando reproducir...');
-                    videoElement.play().catch(error => {
-                        console.error('❌ Error al reproducir video en debug:', error);
-                    });
-                }
-            }
-        }, 1000);
-    }, 2000);
+    }
 });
 
 onUnmounted(() => {
-    console.log('🧹 Limpiando recursos...');
 
     if (currentVideo.value) {
         // Limpiar el event listener del loop personalizado
         const loopHandler = (currentVideo.value as any).loopHandler;
         if (loopHandler) {
             currentVideo.value.removeEventListener('timeupdate', loopHandler);
-            console.log('🧹 Event listener del loop removido');
         }
 
         currentVideo.value.pause();
