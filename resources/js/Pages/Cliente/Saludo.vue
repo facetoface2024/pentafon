@@ -697,7 +697,7 @@ onUnmounted(() => {
 @media (max-width: 1399px) and (min-width: 768px) {
     .message-card {
         /* Ajustar posición para tablets */
-        top: 22%; /* Ajustar según necesidad */
+        top: 24%; /* Ajustar según necesidad */
         left: 7%; /* Ajustar según necesidad */
         max-width: 1000px;
         width: 100%; /* Ajustar según necesidad */
