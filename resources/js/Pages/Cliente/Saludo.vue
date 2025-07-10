@@ -102,7 +102,7 @@ const seoConfig = computed(() => ({
 // Función para seleccionar video aleatorio (como los mensajes)
 const selectRandomVideo = (): string => {
     const videoNumber = Math.floor(Math.random() * 3) + 1; // Números del 1 al 3
-    const videoPath = `/video/video_fondo_${videoNumber}.mp4`;
+    const videoPath = `/video/fondo_video_${videoNumber}.mp4`;
     console.log(`🎲 Video seleccionado aleatoriamente: ${videoPath}`);
     return videoPath;
 };
@@ -113,7 +113,7 @@ const preloadVideos = (): void => {
 
     // Precargar solo los videos que podrían ser necesarios
     for (let i = 1; i <= 3; i++) {
-        const videoPath = `/video/video_fondo_${i}.mp4`;
+        const videoPath = `/video/fondo_video_${i}.mp4`;
 
         // Crear elemento link para precargar
         const link = document.createElement('link');
@@ -125,6 +125,25 @@ const preloadVideos = (): void => {
     }
 
     console.log('📹 Enlaces de precarga de videos creados');
+};
+
+// Función para configurar el loop personalizado del video
+const setupVideoLoop = (videoElement: HTMLVideoElement): void => {
+    const handleTimeUpdate = () => {
+        // Cuando el video llegue al segundo 12, saltar al segundo 8
+        if (videoElement.currentTime >= 12) {
+            console.log('🔄 Video llegó al segundo 12, saltando al segundo 8');
+            videoElement.currentTime = 8;
+        }
+    };
+
+    // Agregar el listener para el tiempo del video
+    videoElement.addEventListener('timeupdate', handleTimeUpdate);
+
+    // Guardar la función para poder removerla después
+    (videoElement as any).loopHandler = handleTimeUpdate;
+
+    console.log('🎬 Loop personalizado configurado: segundos 8-12');
 };
 
 // Función para reproducir video de fondo
@@ -162,12 +181,15 @@ const playBackgroundVideo = async (): Promise<void> => {
             });
         }
 
+        // Configurar el loop personalizado antes de reproducir
+        setupVideoLoop(videoElement);
+
         // Intentar reproducir el video
         try {
             await videoElement.play();
             currentVideo.value = videoElement;
             videoLoaded.value = true;
-            console.log('✅ Video de fondo reproduciéndose');
+            console.log('✅ Video de fondo reproduciéndose con loop personalizado');
         } catch (playError) {
             console.warn('⚠️ Video no pudo reproducirse automáticamente, esperando interacción del usuario');
             // El video se reproducirá cuando el usuario interactúe
@@ -184,23 +206,23 @@ const playBackgroundVideo = async (): Promise<void> => {
 const startSequentialAnimations = () => {
     console.log('🎭 Iniciando animaciones secuenciales...');
 
-    // Mostrar texto superior primero
+    // Mostrar texto superior primero (500ms + 20% = 600ms)
     setTimeout(() => {
         showTopText.value = true;
         console.log('📝 Mostrando texto superior');
-    }, 500);
+    }, 2000);
 
-    // Mostrar nombre después
+    // Mostrar nombre después (1200ms + 20% = 1440ms)
     setTimeout(() => {
         showName.value = true;
         console.log('👤 Mostrando nombre');
-    }, 1200);
+    }, 4000);
 
-    // Mostrar texto inferior al final
+    // Mostrar texto inferior al final (1900ms + 20% = 2280ms)
     setTimeout(() => {
         showBottomText.value = true;
         console.log('📝 Mostrando texto inferior');
-    }, 1900);
+    }, 6000);
 };
 
 // Watcher para selectedVideoPath
@@ -274,6 +296,13 @@ onUnmounted(() => {
     console.log('🧹 Limpiando recursos...');
 
     if (currentVideo.value) {
+        // Limpiar el event listener del loop personalizado
+        const loopHandler = (currentVideo.value as any).loopHandler;
+        if (loopHandler) {
+            currentVideo.value.removeEventListener('timeupdate', loopHandler);
+            console.log('🧹 Event listener del loop removido');
+        }
+
         currentVideo.value.pause();
         currentVideo.value = null;
     }
@@ -310,7 +339,6 @@ onUnmounted(() => {
                         :src="selectedVideoPath"
                         autoplay
                         muted
-                        loop
                         playsinline
                         preload="auto"
                         class="background-video"
@@ -521,7 +549,7 @@ onUnmounted(() => {
     .message-card {
         /* Ajustar posición para tablets */
         top: 22%; /* Ajustar según necesidad */
-        left: 8%; /* Ajustar según necesidad */
+        left: 3%; /* Ajustar según necesidad */
         max-width: 1000px;
         width: 100%; /* Ajustar según necesidad */
     }
