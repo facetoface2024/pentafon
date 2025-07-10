@@ -215,19 +215,19 @@ const startSequentialAnimations = () => {
     setTimeout(() => {
         showTopText.value = true;
 
-    }, 2000);
+    }, 1000);
 
     // Mostrar nombre después (1200ms + 20% = 1440ms)
     setTimeout(() => {
         showName.value = true;
 
-    }, 4000);
+    }, 3000);
 
     // Mostrar texto inferior al final (1900ms + 20% = 2280ms)
     setTimeout(() => {
         showBottomText.value = true;
 
-    }, 6000);
+    }, 5000);
 };
 
 // Watcher para selectedVideoPath
@@ -300,7 +300,7 @@ onUnmounted(() => {
         const loopHandler = (currentVideo.value as any).loopHandler;
         if (loopHandler) {
             currentVideo.value.removeEventListener('timeupdate', loopHandler);
-           
+
         }
 
         currentVideo.value.pause();
@@ -455,7 +455,7 @@ onUnmounted(() => {
     top: 20%; /* Distancia desde arriba */
     left: 5%; /* Distancia desde la izquierda */
     max-width: 1000px;
-    width: 45%; /* Ancho relativo al contenedor */
+    width: 100%; /* Ancho relativo al contenedor */
     z-index: 10;
 }
 
@@ -549,7 +549,7 @@ onUnmounted(() => {
     .message-card {
         /* Ajustar posición para tablets */
         top: 22%; /* Ajustar según necesidad */
-        left: 7%; /* Ajustar según necesidad */
+        left: 5%; /* Ajustar según necesidad */
         max-width: 1000px;
         width: 100%; /* Ajustar según necesidad */
     }
